@@ -11,7 +11,7 @@
     <ul class="app-nav">
       <!-- User Menu -->
       <li>
-        <a class="app-nav__item" href="/">
+        <a class="app-nav__item" href="/posorder">
           <i class="bx bx-log-out bx-rotate-180"></i>
         </a>
       </li>
