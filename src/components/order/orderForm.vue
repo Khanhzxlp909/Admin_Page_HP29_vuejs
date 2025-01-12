@@ -172,7 +172,7 @@
               </div>
               <div class="form-group col-md-12">
                 <label class="control-label">Khách hàng còn nợ: </label>
-                <p class="control-all-money">  {{ formatPrice(changeDue) }} VNĐ</p>
+                <p class="control-all-money"> {{ formatPrice(changeDue) }} VNĐ</p>
               </div>
               <div class="tile-footer col-md-12">
                 <button class="btn btn-primary luu-san-pham" type="button" @click="saveOrder">Lưu đơn hàng (F9)</button>
@@ -186,49 +186,7 @@
       </div>
     </main>
     <!-- Modal -->
-    <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
-         aria-labelledby="exampleModalCenterTitle" data-backdrop="static" data-keyboard="false">
-      <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-          <div class="modal-body">
-            <div class="row">
-              <div class="form-group col-md-12">
-                <span class="thong-tin-thanh-toan">
-                  <h5>Tạo mới khách hàng </h5>
-                </span>
-              </div>
-              <div class="form-group col-md-12">
-                <label class="control-label">Họ và tên</label>
-                <input class="form-control" type="text" v-model="newCustomer.name" required>
-              </div>
-              <div class="form-group col-md-6">
-                <label class="control-label">Địa chỉ</label>
-                <input class="form-control" type="text" v-model="newCustomer.address" required>
-              </div>
-              <div class="form-group col-md-6">
-                <label class="control-label">Email</label>
-                <input class="form-control" type="text" v-model="newCustomer.email" required>
-              </div>
-              <div class="form-group col-md-6">
-                <label class="control-label">Ngày sinh</label>
-                <input class="form-control" type="date" v-model="newCustomer.birthDate" required>
-              </div>
-              <div class="form-group col-md-6">
-                <label class="control-label">Số điện thoại</label>
-                <input class="form-control" type="number" v-model="newCustomer.phone" required>
-              </div>
-            </div>
-            <br>
-            <button class="btn btn-save" type="button" @click="saveCustomer">Lưu lại</button>
-            <a class="btn btn-cancel" data-dismiss="modal" href="#">Hủy bỏ</a>
-            <br>
-          </div>
-          <div class="modal-footer">
-          </div>
-        </div>
       </div>
-    </div>
-  </div>
 </template>
 
 <script>
@@ -410,7 +368,7 @@ export default {
       };
 
       try {
-        const token = Cookies.get("authToken"); // Lấy token từ cookies
+        const token = Cookies.get("token"); // Lấy token từ cookies
         const response = await axios.post("http://localhost:8080/admin/orders/newOrder", orderData, {
           headers: {
             Authorization: `Bearer ${token}` // Thêm token vào header
