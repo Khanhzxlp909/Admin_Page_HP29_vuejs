@@ -22,23 +22,25 @@
   <aside class="app-sidebar" v-if="!isWarehouseDetailPage" v-show="isSidebarVisible">
     <div class="app-sidebar__user">
       <img
-          class="app-sidebar__user-avatar"
-          src="../../../public/favicon.ico"
-          width="50px"
-          alt="User Image"
+        class="app-sidebar__user-avatar"
+        src="../../../public/favicon.ico"
+        width="50px"
+        alt="User Image"
       />
       <div>
-        <p class="app-sidebar__user-name"><b>{{ adminName }}</b></p>
+        <p class="app-sidebar__user-name">
+          <b>{{ adminName }}</b>
+        </p>
         <p class="app-sidebar__user-designation">Chào mừng bạn trở lại</p>
       </div>
     </div>
-    <hr/>
+    <hr />
     <ul class="app-menu">
       <li>
         <a
-            class="app-menu__item"
-            href="/order"
-            @click.prevent="navigateTo('order')"
+          class="app-menu__item"
+          href="/order"
+          @click.prevent="navigateTo('order')"
         >
           <i class="app-menu__icon bx bx-cart-alt"></i>
           <span class="app-menu__label">POS Bán Hàng</span>
@@ -75,7 +77,7 @@
         </a>
       </li>
       <li>
-        <a class="app-menu__item" href="login">
+        <a class="app-menu__item active" href="/login">
           <i class="app-menu__icon bx bx-task"></i>
           <span class="app-menu__label">Đăng nhập</span>
         </a>
@@ -97,7 +99,7 @@ export default {
   data() {
     return {
       isSidebarVisible: true,
-      admin: JSON.parse(Cookies.get('admin') || '{}'),
+      admin: JSON.parse(Cookies.get("admin") || "{}"),
     };
   },
   computed: {
@@ -115,7 +117,8 @@ export default {
     if (!this.admin || Object.keys(this.admin).length === 0) {
       this.admin = 'Chưa đăng nhập'
       // this.$router.push("/login"); // Chuyển hướng đến trang đăng nhập nếu admin null
-    }
+    
+    },
   },
   methods: {
     toggleSidebar() {
@@ -125,7 +128,7 @@ export default {
       // Xóa token khỏi cookies
       Cookies.remove("token"); // Thay đổi "token" thành tên cookie bạn đã sử dụng
       Cookies.remove("admin"); // Thay đổi "token" thành tên cookie bạn đã sử dụng
-      location.reload()
+      location.reload();
       // Chuyển hướng đến trang đăng nhập
       this.$router.push("/login"); // Hoặc trang bạn muốn chuyển hướng đến
     },
