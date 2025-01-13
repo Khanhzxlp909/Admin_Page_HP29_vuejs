@@ -16,7 +16,7 @@
         <div class="col-md-12">
           <div class="app-title">
             <ul class="app-breadcrumb breadcrumb">
-              <li class="breadcrumb-item"><a href="#"><b>POS bán hàng</b></a></li>
+              <li class="breadcrumb-item"><a href="#"><b>Kho hàng</b></a></li>
             </ul>
             <div id="clock"></div>
           </div>
@@ -25,7 +25,7 @@
       <div class="row">
         <div class="col-md-8">
           <div class="tile">
-            <h3 class="tile-title">Phần mềm bán hàng</h3>
+            <h3 class="tile-title">Phần mềm nhập kho</h3>
             <input type="text" id="myInput" ref="myInput" @input="myFunction"
                    placeholder="Nhập mã sản phẩm hoặc tên sản phẩm để tìm kiếm...">
             <div class="du--lieu-san-pham">
@@ -100,9 +100,11 @@
                   <td>{{ item.sku }}</td>
                   <td>{{ item.productID.name }}</td>
                   <td>
-                    <button @click="decreaseQuantity(item)">-</button>
-                    {{ item.quantity }}
-                    <button @click="increaseQuantity(item)">+</button>
+                    <div class="quantity-control">
+                      <button @click="decreaseQuantity(item)">-</button>
+                      <input class="" type="number" v-model="item.quantity" min="1"/>
+                      <button @click="increaseQuantity(item)">+</button>
+                    </div>
                   </td>
                   <td>{{ item.price }}</td>
                   <td>{{ formatPrice(item.quantity * parsePrice(item.price)) }}</td>
@@ -120,38 +122,25 @@
             <h3 class="tile-title">Thông tin thanh toán</h3>
             <div class="row">
               <div class="form-group col-md-10">
-                <label class="control-label">Họ tên khách hàng</label>
-                <select class="form-control" v-model="selectedCustomer">
-                  <option v-for="customer in customers" :key="customer.id" :value="customer">
-                    {{ customer.name }}
+                <label class="control-label">Nhà cung cấp</label>
+                <select class="form-control" v-model="warehouse.suppiller">
+                  <option disabled value="">Chọn nhà cung cấp</option>
+                  <option v-for="supplier in customers" :key="supplier.id" :value="supplier.id">
+                    {{ supplier.name }}
                   </option>
                 </select>
               </div>
-              <div class="form-group col-md-2">
-                <label style="text-align: center;" class="control-label">Tạo mới</label>
-                <button class="btn btn-primary btn-them" data-toggle="modal" data-target="#exampleModalCenter">
-                  <i class="fas fa-user-plus"></i>
-                </button>
-              </div>
               <div class="form-group col-md-12">
-                <label class="control-label">Voucher</label>
-                <input class="form-control" id="voucher" ref="voucher" v-model="codevoucher" @input="getVoucher()" type="text"
-                       placeholder="Nhập mã voucher">
-              </div>
-              <div class="form-group col-md-12">
-                <label class="control-label">Ghi chú đơn hàng</label>
+                <label class="control-label">Nhân viên</label>
                 <textarea class="form-control" rows="4" placeholder="Ghi chú thêm đơn hàng"
-                          v-model="orderNote"></textarea>
+                          v-model="warehouse.employee" disabled ></textarea>
               </div>
             </div>
             <div class="row">
               <div class="form-group col-md-12">
-                <label class="control-label">Hình thức thanh toán</label>
-                <select class="form-control" v-model="paymentMethod" required>
-                  <option value="1">Quẹt thẻ</option>
-                  <option value="2">Thanh toán trực tiếp</option>
-                  <option value="3">Chuyển khoản</option>
-                </select>
+                <label class="control-label">Ghi chú đơn hàng</label>
+                <textarea class="form-control" rows="4" placeholder="Ghi chú thêm đơn hàng"
+                          v-model="warehouse.note"></textarea>
               </div>
               <div class="form-group col-md-6">
                 <label class="control-label">Tạm tính tiền hàng: </label>
@@ -167,9 +156,9 @@
               </div>
               <div class="form-group col-md-6">
                 <label class="control-label">Khách hàng đưa tiền (F8): </label>
-                <input class="form-control" style="width: max-content" type="number"
-                       v-model="amountReceived" @input="calculateChange">
+                <input class="form-control" style="width: 360px" type="number" v-model="amountReceived" @input="calculateChange">
               </div>
+
               <div class="form-group col-md-6">
                 <label class="control-label">Khách hàng còn nợ: </label>
                 <p class="control-all-money"> {{ formatPrice(changeDue) }} VNĐ</p>
@@ -177,12 +166,15 @@
               <div class="form-group col-md-6">
                 <label class="control-label">Hình thức thanh toán</label>
                 <select class="form-control" v-model="status" required>
-                  <option value="1">Chờ thanh toán</option>
-                  <option value="2">Đã thanh toán</option>
+                  <option value="1">Đã thanh toán</option>
+                  <option value="2">Chờ thanh toán</option>
                 </select>
               </div>
+
               <div class="tile-footer col-md-12">
-                <button class="btn btn-primary luu-san-pham" type="button" @click="saveOrder">Lưu đơn hàng (F9)</button>
+                <button class="btn btn-primary luu-san-pham" type="button" @click="saveWareHouseDetail">Lưu đơn hàng
+                  (F9)
+                </button>
                 <button class="btn btn-primary luu-va-in" type="button" @click="saveAndPrint">Lưu và in hóa đơn (F10)
                 </button>
                 <a class="btn btn-secondary luu-va-in" href="/">Quay về</a>
@@ -199,12 +191,15 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
+import {useRoute} from "vue-router";
+
 export default {
   data() {
     return {
       products: [],
       customers: [],
       cart: [],
+      warehouse: history.state.warehouse,
       selectedEmployee: '',
       currentPage: 0, // Số trang hiện tại
       pageSize: 4, // Số sản phẩm mỗi trang
@@ -268,7 +263,7 @@ export default {
     },
     async getCustomer() {
       try {
-        const response = await axios.get(`http://localhost:8080/admin/customer/result/all`);
+        const response = await axios.get(`http://localhost:8080/admin/warehouse/suppiller/get`);
         console.log(response.data);
         this.customers = response.data;
       } catch (error) {
@@ -348,63 +343,53 @@ export default {
       }
       return "/img/default.jpg"; // Trường hợp không có hình ảnh
     },
-    async saveOrder() {
-      // Kiểm tra xem giỏ hàng có sản phẩm không
+    async saveWareHouseDetail() {
+      const idWarehouse = this.$route.query.id; // Lấy ID kho từ query params
       if (this.cart.length === 0) {
-        alert("Giỏ hàng trống! Vui lòng thêm sản phẩm trước khi lưu đơn hàng.");
+        alert("Giỏ hàng trống! Vui lòng thêm sản phẩm trước khi lưu.");
         return;
       }
+      // Tạo dữ liệu JSON để gửi đến API
+      for (const item of this.cart) {
 
-      // Tạo dữ liệu đơn hàng theo cấu trúc JSON mẫu
-      const orderData = {
-        customerID: {
-          id: this.selectedCustomer.id // ID khách hàng được chọn từ dropdown
-        },
-        code_Voucher: this.codevoucher, // Mã voucher (có thể thay đổi theo logic của bạn)
-        note: this.orderNote, // Ghi chú đơn hàng
-        paymentMethod: {
-          id: this.paymentMethod // Phương thức thanh toán
-        },
-        status: this.status, // Trạng thái đơn hàng (có thể thay đổi theo logic của bạn)
-        type_Oder: "1", // Loại đơn hàng (có thể thay đổi theo logic của bạn)
-        orderLine: this.cart.map(item => ({
-          variationID: {
-            id: item.id
-          }, // ID sản phẩm
-          quantity: item.quantity // Số lượng
-        })),
-      };
+        const orderData = {
+          status: true,
+          note: "abc", // Bạn có thể thay đổi ghi chú này nếu cần
+          variation: {
+            id: item.id // ID của biến thể sản phẩm, có thể thay đổi theo logic của bạn
+          },
+          quantity: this.cart.reduce((total, item) => total + item.quantity, 0), // Tổng số lượng từ giỏ hàng
+          total_Amount: this.cart.reduce((total, item) => total + this.parsePrice(item.price) * item.quantity, 0).toFixed(2), // Tính tổng tiền
+          price: this.cart.reduce((total, item) => total + this.parsePrice(item.price) * item.quantity, 0).toFixed(2), // Tính tổng tiền
+          import: idWarehouse // ID nhập kho, có thể thay đổi theo logic của bạn
+        };
+        console.log(orderData)
+        // Lấy token từ cookies
+        try {
+          const token = Cookies.get("token"); // Lấy token từ cookies
+          const response = await axios.post(`http://localhost:8080/admin/warehouse/${idWarehouse}/add/whdt`, orderData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          });
 
-      try {
-        const token = Cookies.get("token"); // Lấy token từ cookies
-        const response = await axios.post("http://localhost:8080/admin/orders/newOrder", orderData, {
-          headers: {
-            Authorization: `Bearer ${token}` // Thêm token vào header
+          if (response.status === 200) {
+
+            // Reset giỏ hàng hoặc thực hiện các hành động khác nếu cần
+            this.fetchProducts(this.currentPage, this.pageSize);
+            this.cart = [];
+            this.orderNote = '';
+            this.codevoucher = '';
+          } else {
+            alert("Không thể lưu chi tiết kho. Vui lòng thử lại!");
           }
-        });
-
-        if (response.status === 201) {
-          alert("Đơn hàng đã được lưu thành công!");
-          this.fetchProducts(this.currentPage, this.pageSize);
-          // Reset các trường dữ liệu nếu cần
-          this.cart = [];
-          this.orderNote = '';
-          this.paymentMethod = '';
-          this.selectedCustomer = null; // Reset khách hàng đã chọn
-          this.newCustomer = { // Reset thông tin khách hàng
-            name: '',
-            address: '',
-            email: '',
-            birthDate: '',
-            phone: ''
-          };
-        } else {
-          alert("Không thể lưu đơn hàng. Vui lòng thử lại!");
+        } catch (error) {
+          console.error("Lỗi khi lưu chi tiết kho:", error);
+          alert("Đã xảy ra lỗi khi lưu chi tiết kho!");
         }
-      } catch (error) {
-        console.error("Lỗi khi lưu đơn hàng:", error);
-        alert("Có lỗi xảy ra. Vui lòng thử lại!");
       }
+      alert("Chi tiết kho đã được lưu thành công!");
     },
     saveAndPrint() {
       // Implement save and print functionality
@@ -421,3 +406,66 @@ export default {
   }
 };
 </script>
+
+<style>/* Styling for quantity input and buttons */
+input[type="number"] {
+  width: 60px;
+  padding: 5px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  margin: 0 5px;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input[type="number"]:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+button {
+  padding: 5px 10px;
+  border: none;
+  background-color: #007bff;
+  color: #fff;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:active {
+  background-color: #004085;
+  transform: scale(0.95);
+}
+
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+button:focus {
+  outline: none;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quantity-control button {
+  width: 30px;
+  height: 30px;
+}
+
+.quantity-control input {
+  margin: 0 5px;
+}
+</style>

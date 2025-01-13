@@ -1,7 +1,7 @@
 <script setup>
-import { ref } from 'vue';
+import {ref} from 'vue';
 import axios from 'axios';
-import { useRouter } from 'vue-router';
+import {useRouter} from 'vue-router';
 import Cookies from 'js-cookie'; // Import js-cookie
 
 const username = ref('');
@@ -11,24 +11,30 @@ const errorMessage = ref('');
 const router = useRouter();
 
 const login = async () => {
-  errorMessage.value = ''; 
+  errorMessage.value = '';
   try {
     const response = await axios.post('http://localhost:8080/MiniatureCrafts/signin', {
       username: username.value,
       password: password.value,
     });
 
-    if (response.data && response.data.token) {
-      Cookies.set('token', response.data.token); // Lưu token vào cookie với thời gian hết hạn 7 ngày
-      Cookies.set('admin', JSON.stringify(response.data.userInfo));
-      console.log("ADMIN: "+ JSON.stringify(Cookies.get('admin')));
-      console.log("ADMIN: "+ JSON.stringify(response.data.userInfo.name));
-      // Chuyển hướng đến trang sản phẩm
-      window.location.href = '/product'; // Dùng window.location.href để chuyển hướng đến URL bên ngoài
+    if (response.data.roles.includes('ADMIN') || response.data.roles.includes('USER')) {
+      if (response.data && response.data.token) {
+        Cookies.set('token', response.data.token); // Lưu token vào cookie với thời gian hết hạn 7 ngày
+        Cookies.set('admin', JSON.stringify(response.data.userInfo), { expires: 1 });
+        Cookies.set('roles', JSON.stringify(response.data.roles));
+        console.log("ADMIN: " + JSON.stringify(Cookies.get('admin')));
+        console.log("ADMIN: " + JSON.stringify(response.data.userInfo.name));
+        // Chuyển hướng đến trang sản phẩm
+        window.location.href = '/product'; // Dùng window.location.href để chuyển hướng đến URL bên ngoài
+      }
+    }else{
+      errorMessage.value = error.response?.data?.message || 'Bạn không đủ quyền hạn, vui lòng đăng nhập lại.';
+      window.location.href = '/login';
     }
   } catch (error) {
-     console.log(error);
-    
+    console.log(error);
+
     errorMessage.value = error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
   }
 };
@@ -40,23 +46,23 @@ const login = async () => {
     <form @submit.prevent="login" class="login-form">
       <div class="form-group">
         <label for="username">Tên đăng nhập:</label>
-        <input 
-          id="username" 
-          type="text" 
-          v-model="username" 
-          placeholder="Nhập tên đăng nhập"
-          required
+        <input
+            id="username"
+            type="text"
+            v-model="username"
+            placeholder="Nhập tên đăng nhập"
+            required
         />
       </div>
 
       <div class="form-group">
         <label for="password">Mật khẩu:</label>
-        <input 
-          id="password" 
-          type="password" 
-          v-model="password" 
-          placeholder="Nhập mật khẩu"
-          required
+        <input
+            id="password"
+            type="password"
+            v-model="password"
+            placeholder="Nhập mật khẩu"
+            required
         />
       </div>
 

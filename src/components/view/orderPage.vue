@@ -1,113 +1,114 @@
 <template>
-  <div class="app-content">
-    <div class="app-title">
-      <ul class="app-breadcrumb breadcrumb">
-        <li class="breadcrumb-item">Danh sách đơn hàng</li>
-        <li class="breadcrumb-item"><a href="#">Thêm đơn hàng</a></li>
+  <div class="app sidebar-mini rtl">
+    <!-- Navbar -->
+    <header class="app-header">
+      <ul class="app-nav">
+        <li>
+          <a class="app-nav__item" href="/order">
+            <i class='bx bx-log-out bx-rotate-180'></i>
+          </a>
+        </li>
       </ul>
-    </div>
-    <div class="row">
-      <div class="col-md-12">
-        <div class="tile">
-          <h3 class="tile-title">Tạo mới đơn hàng</h3>
-          <div class="tile-body">
-            <form @submit.prevent="handleSubmit" class="row">
-              <div class="form-group col-md-4">
-                <label class="control-label">ID đơn hàng ( Nếu không nhập sẽ tự động phát sinh )</label>
-                <input v-model="order.id" class="form-control" type="text" />
+    </header>
+
+    <main class="app-content">
+      <div class="app-title">
+        <ul class="app-breadcrumb breadcrumb">
+          <li class="breadcrumb-item"><a href="#"><b>Bảng điều khiển</b></a></li>
+        </ul>
+        <div id="clock">{{ currentTime }}</div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="tile">
+            <h3 class="tile-title">Danh sách nhân viên</h3>
+            <div class="tile-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="widget-small primary coloured-icon">
+                    <i class='icon bx bxs-user-account fa-3x'></i>
+                    <div class="info">
+                      <h4>Tổng nhân viên</h4>
+                      <p><b>{{ totalEmployees }} nhân viên</b></p>
+                      <p class="info-tong">Tổng số nhân viên được quản lý.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="widget-small info coloured-icon">
+                    <i class='icon bx bxs-data fa-3x'></i>
+                    <div class="info">
+                      <h4>Tình trạng</h4>
+                      <p><b>{{ activeEmployees }} nhân viên đang hoạt động</b></p>
+                      <p class="info-tong">Số nhân viên đang hoạt động.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="form-group col-md-4">
-                <label class="control-label">Tên khách hàng</label>
-                <input v-model="order.customerName" class="form-control" type="text" />
-              </div>
-              <div class="form-group col-md-4">
-                <label class="control-label">Số điện thoại khách hàng</label>
-                <input v-model="order.customerPhone" class="form-control" type="number" />
-              </div>
-              <div class="form-group col-md-4">
-                <label class="control-label">Địa chỉ khách hàng</label>
-                <input v-model="order.customerAddress" class="form-control" type="text" />
-              </div>
-              <div class="form-group col-md-4">
-                <label class="control-label">Tên người bán</label>
-                <input v-model="order.sellerName" class="form-control" type="text" />
-              </div>
-              <div class="form-group col-md-4">
-                <label class="control-label">Số hiệu người bán</label>
-                <input v-model="order.sellerId" class="form-control" type="text" />
-              </div>
-              <div class="form-group col-md-4">
-                <label class="control-label">Ngày làm đơn hàng</label>
-                <input v-model="order.orderDate" class="form-control" type="date" />
-              </div>
-              <div class="form-group col-md-4">
-                <label class="control-label">Tên sản phẩm cần bán</label>
-                <input v-model="order.productName" class="form-control" type="text" />
-              </div>
-              <div class="form-group col-md-4">
-                <label class="control-label">Mã sản phẩm</label>
-                <input v-model="order.productCode" class="form-control" type="text" />
-              </div>
-              <div class="form-group col-md-4">
-                <label class="control-label">Số lượng</label>
-                <input v-model="order.quantity" class="form-control" type="number" />
-              </div>
-              <div class="form-group col-md-4">
-                <label for="status" class="control-label">Tình trạng</label>
-                <select v-model="order.status" class="form-control" id="status">
-                  <option>-- Chọn tình trạng --</option>
-                  <option>Đã xử lý</option>
-                  <option>Đang chờ</option>
-                  <option>Đã hủy</option>
-                </select>
-              </div>
-              <div class="form-group col-md-4">
-                <label class="control-label">Ghi chú đơn hàng</label>
-                <textarea v-model="order.notes" class="form-control" rows="4"></textarea>
-              </div>
-              <div class="col-md-12">
-                <button class="btn btn-save" type="submit">Lưu lại</button>
-                <a class="btn btn-cancel" href="/doc/table-data-oder.html">Hủy bỏ </a>
-              </div>
-            </form>
+              <table class="table table-hover table-bordered">
+                <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Tên nhân viên</th>
+                  <th>Ngày sinh</th>
+                  <th>Số điện thoại</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="employee in employees" :key="employee.id">
+                  <td>{{ employee.id }}</td>
+                  <td>{{ employee.name }}</td>
+                  <td>{{ employee.birthDate }}</td>
+                  <td><span class="tag tag-success">{{ employee.phone }}</span></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <div class="text-center" style="font-size: 13px">
+        <p><b>Copyright © 2023. All rights reserved.</b></p>
+      </div>
+    </main>
   </div>
 </template>
 
 <script>
+import axios from 'axios';
+import Cookies from 'js-cookie';
 export default {
   data() {
     return {
-      order: {
-        id: '',
-        customerName: '',
-        customerPhone: '',
-        customerAddress: '',
-        sellerName: '',
-        sellerId: '',
-        orderDate: '',
-        productName: '',
-        productCode: '',
-        quantity: '',
-        status: '',
-        notes: ''
-      }
+      employees: [],
+      totalEmployees: 0,
+      activeEmployees: 0,
+      currentTime: new Date().toLocaleString()
     };
   },
+  mounted() {
+    this.fetchEmployees(); // Gọi hàm để lấy danh sách nhân viên khi component được mount
+    this.updateClock(); // Cập nhật đồng hồ
+  },
   methods: {
-    handleSubmit() {
-      // Logic to handle form submission
-      console.log(this.order);
-      // You can add your API call here to save the order
+    async fetchEmployees() {
+      try {
+        const response = await axios.get('http://localhost:8080/admin/employee/all'); // Đường dẫn API để lấy danh sách nhân viên
+        this.employees = response.data; // Lưu danh sách nhân viên
+        this.totalEmployees = this.employees.length; // Cập nhật tổng số nhân viên
+        this.activeEmployees = this.employees.filter(emp => emp.status).length; // Cập nhật số nhân viên đang hoạt động
+      } catch (error) {
+        console.error("Có lỗi xảy ra khi lấy danh sách nhân viên:", error);
+      }
+    },
+    updateClock() {
+      setInterval(() => {
+        this.currentTime = new Date().toLocaleString(); // Cập nhật thời gian hiện tại
+      }, 1000);
     }
   }
 };
 </script>
 
 <style scoped>
-/* Add your styles here */
-@import "../../global.css";
 </style>
