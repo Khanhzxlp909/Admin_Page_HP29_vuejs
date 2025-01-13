@@ -17,7 +17,6 @@
       </ul>
     </header>
 
-
     <main class="app-content">
       <div class="app-title">
         <ul class="app-breadcrumb breadcrumb side">
@@ -34,62 +33,13 @@
             <div class="tile-body">
               <div class="row element-button">
                 <div class="col-sm-2">
-                  <a
+                  <router-link
                     class="btn btn-add btn-sm"
-                    href="form-add-customer.html"
+                    to="/customer/add"
                     title="Thêm"
-                    ><i class="fas fa-plus"></i> Tạo mới khách hàng</a
                   >
-                </div>
-                <div class="col-sm-2">
-                  <a
-                    class="btn btn-delete btn-sm nhap-tu-file"
-                    type="button"
-                    title="Nhập"
-                    @click="importFromFile"
-                    ><i class="fas fa-file-upload"></i> Tải từ file</a
-                  >
-                </div>
-                <div class="col-sm-2">
-                  <a
-                    class="btn btn-delete btn-sm print-file"
-                    type="button"
-                    title="In"
-                    @click="printTable"
-                    ><i class="fas fa-print"></i> In dữ liệu</a
-                  >
-                </div>
-                <div class="col-sm-2">
-                  <a
-                    class="btn btn-delete btn-sm print-file js-textareacopybtn"
-                    type="button"
-                    title="Sao chép"
-                    @click="copyToClipboard"
-                    ><i class="fas fa-copy"></i> Sao chép</a
-                  >
-                </div>
-                <div class="col-sm-2">
-                  <a class="btn btn-excel btn-sm" href="" title="In"
-                    ><i class="fas fa-file-excel"></i> Xuất Excel</a
-                  >
-                </div>
-                <div class="col-sm-2">
-                  <a
-                    class="btn btn-delete btn-sm pdf-file"
-                    type="button"
-                    title="In"
-                    @click="exportToPDF"
-                    ><i class="fas fa-file-pdf"></i> Xuất PDF</a
-                  >
-                </div>
-                <div class="col-sm-2">
-                  <a
-                    class="btn btn-delete btn-sm"
-                    type="button"
-                    title="Xóa"
-                    @click="deleteAll"
-                    ><i class="fas fa-trash-alt"></i> Xóa tất cả
-                  </a>
+                    <i class="fas fa-plus"></i> Tạo mới khách hàng
+                  </router-link>
                 </div>
               </div>
               <table
@@ -113,17 +63,23 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="customer in customers" :key="customer.id">
+                  <tr v-for="customer in paginatedCustomers" :key="customer.id">
                     <td width="10">
                       <input type="checkbox" :value="customer.id" />
                     </td>
-                    <td>{{ customer.id }}</td>
-                    <td>{{ customer.name }}</td>
-                    <td>{{ customer.address }}</td>
-                    <td>{{ customer.creation_date }}</td>
-                    <td>{{ customer.gender }}</td>
-                    <td>{{ customer.phone }}</td>
-                    <td>{{ customer.note }}</td>
+                    <td @click="goToEdit(customer.id)">{{ customer.id }}</td>
+                    <td @click="goToEdit(customer.id)">{{ customer.name }}</td>
+                    <td @click="goToEdit(customer.id)">
+                      {{ customer.address }}
+                    </td>
+                    <td @click="goToEdit(customer.id)">
+                      {{ customer.creation_date }}
+                    </td>
+                    <td @click="goToEdit(customer.id)">
+                      {{ customer.gender }}
+                    </td>
+                    <td @click="goToEdit(customer.id)">{{ customer.phone }}</td>
+                    <td @click="goToEdit(customer.id)">{{ customer.note }}</td>
                     <td class="table-td-center">
                       <button
                         class="btn btn-primary btn-sm trash"
@@ -132,12 +88,13 @@
                         @click="confirmDelete(customer.id)"
                       >
                         <i class="fas fa-trash-alt"></i>
+                        Xóa
                       </button>
                       <button
                         class="btn btn-primary btn-sm edit"
                         type="button"
                         title="Sửa"
-                        @click="editCustomer(customer)"
+                        @click="goToEdit(customer.id)"
                       >
                         <i class="fas fa-edit"></i>
                       </button>
@@ -145,154 +102,77 @@
                   </tr>
                 </tbody>
               </table>
+
+              <!-- Phân trang -->
+              <div class="pagination">
+                <button
+                  :disabled="currentPage === 1"
+                  @click="changePage(currentPage - 1)"
+                  class="btn btn-primary btn-sm"
+                >
+                  Trước
+                </button>
+                <button
+                  v-for="page in totalPages"
+                  :key="page"
+                  @click="changePage(page)"
+                  :class="['btn', 'btn-sm', currentPage === page ? 'btn-primary' : 'btn-secondary']"
+                >
+                  {{ page }}
+                </button>
+                <button
+                  :disabled="currentPage === totalPages"
+                  @click="changePage(currentPage + 1)"
+                  class="btn btn-primary btn-sm"
+                >
+                  Tiếp
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </main>
-
-    <!-- Modal for editing customer -->
-    <div
-      class="modal fade"
-      id="ModalUP"
-      tabindex="-1"
-      role="dialog"
-      aria-hidden="true"
-      data-backdrop="static"
-      data-keyboard="false"
-    >
-      <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-          <div class="modal-body">
-            <div class="row">
-              <div class="form-group col-md-12">
-                <span class="thong-tin-thanh-toan">
-                  <h5>Chỉnh sửa thông tin khách hàng cơ bản</h5>
-                </span>
-              </div>
-            </div>
-            <div class="row">
-              <div class="form-group col-md-6">
-                <label class="control-label">ID khách hàng</label>
-                <input
-                  class="form-control"
-                  type="text"
-                  v-model="selectedCustomer.id"
-                  disabled
-                />
-              </div>
-              <div class="form-group col-md-6">
-                <label class="control-label">Họ và tên</label>
-                <input
-                  class="form-control"
-                  type="text"
-                  v-model="selectedCustomer.name"
-                  required
-                />
-              </div>
-              <div class="form-group col-md-6">
-                <label class="control-label">Số điện thoại</label>
-                <input
-                  class="form-control"
-                  type="number"
-                  v-model="selectedCustomer.phone"
-                  required
-                />
-              </div>
-              <div class="form-group col-md-6">
-                <label class="control-label">Địa chỉ</label>
-                <input
-                  class="form-control"
-                  type="text"
-                  v-model="selectedCustomer.address"
-                  required
-                />
-              </div>
-              <div class="form-group col-md-6">
-                <label class="control-label">Ngày sinh</label>
-                <input
-                  class="form-control"
-                  type="date"
-                  v-model="selectedCustomer.creation_date"
-                />
-              </div>
-              <div class="form-group col-md-6">
-                <label for="genderSelect" class="control-label"
-                  >Giới tính</label
-                >
-                <select
-                  class="form-control"
-                  v-model="selectedCustomer.gender"
-                  id="genderSelect"
-                >
-                  <option value="Nam">Nam</option>
-                  <option value="Nữ">Nữ</option>
-                </select>
-              </div>
-              <div class="form-group col-md-12">
-                <label class="control-label">Ghi chú</label>
-                <textarea
-                  class="form-control"
-                  v-model="selectedCustomer.note"
-                ></textarea>
-              </div>
-            </div>
-            <button class="btn btn-save" type="button" @click="saveCustomer">
-              Lưu lại
-            </button>
-            <a class="btn btn-cancel" data-dismiss="modal" href="#">Hủy bỏ</a>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Modal for editing customer -->
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import axios from "axios";
 
 export default {
   setup() {
     const customers = ref([]);
-    const selectedCustomer = ref({
-      id: "",
-      name: "",
-      address: "",
-      phone: "",
-      creation_date: "",
-      gender: "Nam",
-      note: "",
-    });
+    const currentPage = ref(1);
+    const itemsPerPage = ref(5); // Số khách hàng trên mỗi trang
+    const totalItems = ref(0);
 
     const fetchCustomers = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8080/admin/customer/result/all"
+          `http://localhost:8080/admin/customer/result/all`
         );
-        customers.value = response.data; // Giả sử API trả về danh sách khách hàng
+        customers.value = response.data;
+        totalItems.value = customers.value.length; // Cập nhật tổng số khách hàng
       } catch (error) {
         console.error("Có lỗi xảy ra khi lấy dữ liệu khách hàng:", error);
       }
     };
 
-    const editCustomer = (customer) => {
-      selectedCustomer.value = { ...customer }; // Sao chép thông tin khách hàng vào modal
-      $("#ModalUP").modal("show"); // Hiện modal
+    const paginatedCustomers = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage.value;
+      const end = start + itemsPerPage.value;
+      return customers.value.slice(start, end);
+    });
+
+    const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
+
+    const changePage = (page) => {
+      currentPage.value = page;
     };
 
-    const saveCustomer = async () => {
-      try {
-        await axios.put(
-          `http://localhost:8080/admin/customer/${selectedCustomer.value.id}`,
-          selectedCustomer.value
-        );
-        fetchCustomers(); // Cập nhật danh sách khách hàng sau khi lưu
-        $("#ModalUP").modal("hide"); // Ẩn modal
-      } catch (error) {
-        console.error("Có lỗi xảy ra khi lưu thông tin khách hàng:", error);
-      }
+    const goToEdit = (id) => {
+      window.location.href = `/customer/edit?id=${id}`;
     };
 
     const confirmDelete = (id) => {
@@ -303,55 +183,81 @@ export default {
 
     const deleteCustomer = async (id) => {
       try {
-        await axios.delete(`http://localhost:8080/admin/customer/${id}`);
-        fetchCustomers(); // Cập nhật danh sách khách hàng sau khi xóa
+        const url = `http://localhost:8080/admin/customer/delete/${id}`;
+        await axios.get(url);
+        fetchCustomers(); // Refresh danh sách sau khi xóa
+        alert("Khách hàng đã được xóa thành công.");
       } catch (error) {
         console.error("Có lỗi xảy ra khi xóa khách hàng:", error);
+        alert("Xóa khách hàng thất bại. Vui lòng thử lại.");
       }
     };
 
-    const importFromFile = () => {
-      // Logic để nhập từ file
-    };
-
-    const printTable = () => {
-      // Logic để in bảng
-    };
-
-    const copyToClipboard = () => {
-      // Logic để sao chép
-    };
-
-    const exportToPDF = () => {
-      // Logic để xuất PDF
-    };
-
-    const deleteAll = () => {
-      // Logic để xóa tất cả
-    };
-
     onMounted(() => {
-      fetchCustomers(); // Lấy danh sách khách hàng khi component được gắn
+      fetchCustomers();
     });
 
     return {
-      customers,
-      selectedCustomer,
+      paginatedCustomers,
+      currentPage,
+      totalPages,
       fetchCustomers,
-      editCustomer,
-      saveCustomer,
+      changePage,
       confirmDelete,
-      deleteCustomer,
-      importFromFile,
-      printTable,
-      copyToClipboard,
-      exportToPDF,
-      deleteAll,
+      goToEdit,
     };
   },
 };
 </script>
 
 <style scoped>
-/* Thêm các kiểu CSS tùy chỉnh ở đây */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pagination button {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 5px 10px;
+  margin: 0 5px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pagination button:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.pagination button:disabled {
+  background-color: #ddd;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.pagination .btn-primary {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+}
+
+.pagination .btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.pagination .btn-secondary {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.pagination .btn-secondary:hover {
+  background-color: #e0e0e0;
+}
+
 </style>
