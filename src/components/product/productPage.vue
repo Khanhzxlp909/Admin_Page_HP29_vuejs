@@ -9,7 +9,7 @@
       ></a>
       <ul class="app-nav">
         <li>
-          <a class="app-nav__item" href="/index.html">
+          <a class="app-nav__item" href="/order">
             <i class="bx bx-log-out bx-rotate-180"></i>
           </a>
         </li>
@@ -33,8 +33,17 @@
                 <div class="col-sm-2">
                   <button
                     class="btn btn-add btn-sm"
-                    @click="navigateToAddProduct"
+                    @click="navigateToAddVariation"
                     title="Thêm"
+                  >
+                    <i class="fas fa-plus"></i> Tạo mới biến thể
+                  </button>
+                </div>
+                <div class="col-sm-2">
+                  <button
+                      class="btn btn-add btn-sm"
+                      @click="navigateToAddProduct"
+                      title="Thêm"
                   >
                     <i class="fas fa-plus"></i> Tạo mới sản phẩm
                   </button>
@@ -151,8 +160,11 @@ export default {
     };
   },
   methods: {
-    navigateToAddProduct() {
+    navigateToAddVariation() {
       this.$router.push("/product/add"); // Chuyển hướng đến `productAdd.vue`
+    },
+    navigateToAddProduct() {
+      this.$router.push("/addproduct"); // Chuyển hướng đến `productAdd.vue`
     },
     // Lấy danh sách sản phẩm
     fetchProducts(page = 0, size = 10) {

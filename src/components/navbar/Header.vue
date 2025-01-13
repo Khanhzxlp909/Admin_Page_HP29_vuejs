@@ -2,16 +2,16 @@
   <header class="app-header">
     <!-- Sidebar toggle button -->
     <a
-      class="app-sidebar__toggle"
-      href="#"
-      @click.prevent="toggleSidebar"
-      aria-label="Hide Sidebar"
+        class="app-sidebar__toggle"
+        href="/"
+        @click.prevent="toggleSidebar"
+        aria-label="Hide Sidebar"
     ></a>
     <!-- Navbar Right Menu -->
     <ul class="app-nav">
       <!-- User Menu -->
       <li>
-        <a class="app-nav__item" href="/">
+        <a class="app-nav__item" href="/posorder">
           <i class="bx bx-log-out bx-rotate-180"></i>
         </a>
       </li>
@@ -19,7 +19,7 @@
   </header>
   <!-- Sidebar menu -->
   <div class="app-sidebar__overlay" @click="toggleSidebar"></div>
-  <aside class="app-sidebar" v-show="isSidebarVisible">
+  <aside class="app-sidebar" v-if="!isWarehouseDetailPage" v-show="isSidebarVisible">
     <div class="app-sidebar__user">
       <img
         class="app-sidebar__user-avatar"
@@ -53,9 +53,9 @@
         </a>
       </li>
       <li>
-        <a class="app-menu__item" href="/employee">
+        <a class="app-menu__item" href="/warehouse">
           <i class="app-menu__icon bx bx-id-card"></i>
-          <span class="app-menu__label">Quản lý nhân viên</span>
+          <span class="app-menu__label">Kho hàng</span>
         </a>
       </li>
       <li>
@@ -71,7 +71,7 @@
         </a>
       </li>
       <li>
-        <a class="app-menu__item active" href="/posorder">
+        <a class="app-menu__item" href="/posorder">
           <i class="app-menu__icon bx bx-task"></i>
           <span class="app-menu__label">Quản lý đơn hàng</span>
         </a>
@@ -104,7 +104,20 @@ export default {
   },
   computed: {
     adminName() {
-      return this.admin ? this.admin.name : "Người dùng"; // Lấy tên người dùng
+      return this.admin ? this.admin.name : 'Người dùng'; // Lấy tên người dùng
+    },
+    isWarehouseDetailPage() {
+      return this.$route.path === "/warehouse/warehouseDetails";
+    },
+    isOrderPage() {
+      return this.$route.path === "/warehouse/warehouseDetails";
+    }
+  },
+  mounted() {
+    if (!this.admin || Object.keys(this.admin).length === 0) {
+      this.admin = 'Chưa đăng nhập'
+      // this.$router.push("/login"); // Chuyển hướng đến trang đăng nhập nếu admin null
+    
     },
   },
   methods: {

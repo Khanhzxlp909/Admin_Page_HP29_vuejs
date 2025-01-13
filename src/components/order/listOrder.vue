@@ -14,7 +14,7 @@
           <div class="tile-body">
             <div class="row element-button">
               <div class="col-sm-2">
-                <router-link class="btn btn-add btn-sm" to="/form-add-don-hang.html" title="Thêm">
+                <router-link class="btn btn-add btn-sm" to="/order" title="Thêm">
                   <i class="fas fa-plus"></i> Tạo mới đơn hàng
                 </router-link>
               </div>
@@ -53,10 +53,10 @@
             <table class="table table-hover table-bordered" id="sampleTable">
               <thead>
               <tr>
-                <th width="10"><input type="checkbox" id="all" @click="toggleAllCheckboxes"></th>
                 <th>ID đơn hàng</th>
                 <th>Khách hàng</th>
-                <th>Sản phẩm</th>
+                <th>Code voucher</th>
+                <th>Phương thức thanh toán</th>
                 <th>Ghi chú</th>
                 <th>Tổng tiền</th>
                 <th>Tình trạng</th>
@@ -64,30 +64,37 @@
               </tr>
               </thead>
               <tbody>
-              <tr v-for="item in orders" :key="item.id">
-                <td width="10"><input type="checkbox" v-model="selectedOrders" :value="item.id"></td>
+              <tr v-for="item in orders" :key="item.id" @click="viewOrderDetails(item.id)">
                 <td>{{ item.id }}</td>
                 <td>{{ item.customerID.name }}</td>
-                <td>
-                  <button class="page-button">
-                    Xem chi tiết
-                  </button>
-                </td>
+                <td>{{ item.code_Voucher }}</td>
+                <td>{{ item.paymentMethod.note }}</td>
                 <td>{{ item.note }}</td>
                 <td>{{ formatPrice(item.total_Payment) }}</td>
                 <td>
-                  <span :class="{'badge bg-success': item.status, 'badge bg-danger': !item.status}">
-                    {{ item.status ? "Thành công" : "Đã Hủy" }}
+                  <span :class="{
+                      'badge bg-danger': item.status === 0,
+                      'badge bg-warning': item.status === 1,
+                      'badge bg-success': item.status === 2
+                    }">
+                    {{ item.status === 0 ? "Đã Hủy" : item.status === 1 ? "Đang chờ xác nhận" : "Đã xác nhận" }}
                   </span>
+
                 </td>
                 <td>
                   <button class="btn btn-primary btn-sm trash" type="button" title="Huỷ đơn hàng"
                           @click="confirmDelete(item.id)">
                     <i class="fas fa-trash-alt"></i> Huỷ đơn hàng
                   </button>
+                  <h1></h1>
                   <button class="btn btn-primary btn-sm edit" type="button" title="Sửa đơn hàng"
-                          @click="editOrder(item.id)">
+                  >
                     <i class="fa fa-edit"></i> Sửa đơn hàng
+                  </button>
+                  <h1></h1>
+                  <button class="btn btn-success btn-sm edit" type="button" title="Sửa đơn hàng"
+                          @click="succressOrder(item.id)">
+                    <i class="fa fa-edit"></i> Xác nhận đơn hàng
                   </button>
                 </td>
               </tr>
@@ -115,12 +122,59 @@
           </div>
         </div>
       </div>
+      <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Chi tiết đơn hàng</h5>
+            <button style="color: black" type="button" class="close" @click="showModal = false">
+              <span>&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="du--lieu-san-pham">
+
+              <table class="table table-hover table-bordered">
+                <thead>
+                <tr>
+                  <th class="so--luong">Mã hàng</th>
+                  <th class="so--luong">Tên sản phẩm</th>
+                  <th class="so--luong" width="10">Ảnh</th>
+                  <th class="so--luong">Số lượng</th>
+                  <th class="so--luong">Giá bán</th>
+                  <th class="so--luong text-center">Chủng loại</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-if="orderDetails.length === 0">
+                  <td colspan="7">Không tìm thấy sản phẩm nào.</td>
+                </tr>
+                <tr v-for="orderDetails in orderDetails" :key="orderDetails">
+                  <td>{{ orderDetails.variationID.sku }}</td>
+                  <td>{{ orderDetails.variationName }}</td>
+                  <td>
+                    <!--                    <img :src="getDefaultImageUrl(product.productID.imagesDTOS)" alt="" width="70px"/>-->
+                  </td>
+                  <td>{{ orderDetails.quantity }}</td>
+                  <td>{{ formatPrice(orderDetails.unit_Price) }}</td>
+                  <td>{{ formatPrice(orderDetails.price) }}</td>
+                  <!--                  <td>{{ product.productID.categoryID.name }}</td>-->
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="closebtn" @click="showModal = false">Đóng</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
 export default {
   data() {
@@ -129,6 +183,8 @@ export default {
       selectedOrders: [],
       currentPage: 0, // Số trang hiện tại
       pageSize: 15, // Số sản phẩm mỗi trang
+      showModal: false, // Biến để hiển thị modal
+      orderDetails: null, // Cần thêm nếu chưa có
     };
   },
   mounted() {
@@ -136,6 +192,20 @@ export default {
     // Gọi hàm để lấy tất cả khách hàng khi component được mount
   },
   methods: {
+    async viewOrderDetails(orderId) {
+      const token = Cookies.get("authToken");
+      console.log("token", token);
+      console.log(orderId);
+
+      try {
+        const response = await axios.get(`http://localhost:8080/admin/orders/history/getprd/${orderId}`);
+        console.log("Chi tiết đơn hàng:", response.data); // Kiểm tra dữ liệu trả về
+        this.orderDetails = response.data;
+        this.showModal = true;
+      } catch (error) {
+        console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
+      }
+    },
     parsePrice(priceString) {
       // Chuyển đổi giá từ chuỗi sang số
       return parseFloat(priceString.replace(/\./g, '').replace(' ₫', ''));
@@ -184,7 +254,7 @@ export default {
       const apiCancel = `http://localhost:8080/admin/orders/cancelOrder/${orderId}`; // Đường dẫn API để hủy đơn hàng
 
       try {
-        const response = await axios.delete(apiCancel, {
+        const response = await axios.get(apiCancel, {
           headers: {
             Authorization: `Bearer ${token}` // Thêm token vào header
           }
@@ -202,8 +272,26 @@ export default {
         alert("Có lỗi xảy ra khi hủy đơn hàng.");
       }
     },
-    editOrder(orderId) {
+    async succressOrder(orderId) {
       // Logic to edit a specific order
+      console.log(orderId);
+      const token = Cookies.get("authToken"); // Lấy token từ cookies
+      const apiCancel = `http://localhost:8080/admin/orders/sucressorder/${orderId}`; // Đường dẫn API để hủy đơn hàng
+
+      try {
+        const response = await axios.get(apiCancel);
+
+        if (response.status === 200) {
+          alert("Đơn hàng đã được xác nhận thành công!");
+          // Cập nhật lại danh sách đơn hàng
+          this.fetchProducts(this.currentPage, this.pageSize);
+        } else {
+          alert("Không thể xác nhận đơn hàng. Vui lòng thử lại!");
+        }
+      } catch (error) {
+        console.error("Lỗi khi hủy đơn hàng:", error);
+        alert("Có lỗi xảy ra khi hủy đơn hàng.");
+      }
     },
     toggleAllCheckboxes(event) {
       const isChecked = event.target.checked;
@@ -219,5 +307,53 @@ export default {
 </script>
 
 <style scoped>
-/* Add your styles here */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-header {
+  background: white;
+  color: black;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 1000px;
+  max-height: 80%;
+  overflow-y: auto;
+}
+
+.close {
+  background: black;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: red;
+}
+
+.closebtn {
+  background: black;
+  border: 1px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.closebtn:hover {
+  background: red;
+}
+
 </style>

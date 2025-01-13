@@ -10,7 +10,7 @@
       ></a>
       <ul class="app-nav">
         <li>
-          <a class="app-nav__item" href="/index.html">
+          <a class="app-nav__item" href="/order">
             <i class="bx bx-log-out bx-rotate-180"></i>
           </a>
         </li>
