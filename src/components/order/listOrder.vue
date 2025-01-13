@@ -53,9 +53,10 @@
             <table class="table table-hover table-bordered" id="sampleTable">
               <thead>
               <tr>
-                <th width="10"><input type="checkbox" id="all" @click="toggleAllCheckboxes"></th>
                 <th>ID đơn hàng</th>
                 <th>Khách hàng</th>
+                <th>Code voucher</th>
+                <th>Phương thức thanh toán</th>
                 <th>Ghi chú</th>
                 <th>Tổng tiền</th>
                 <th>Tình trạng</th>
@@ -64,9 +65,10 @@
               </thead>
               <tbody>
               <tr v-for="item in orders" :key="item.id" @click="viewOrderDetails(item.id)">
-                <td width="10"><input type="checkbox" v-model="selectedOrders" :value="item.id"></td>
                 <td>{{ item.id }}</td>
                 <td>{{ item.customerID.name }}</td>
+                <td>{{ item.code_Voucher }}</td>
+                <td>{{ item.paymentMethod.note }}</td>
                 <td>{{ item.note }}</td>
                 <td>{{ formatPrice(item.total_Payment) }}</td>
                 <td>
@@ -86,12 +88,12 @@
                   </button>
                   <h1></h1>
                   <button class="btn btn-primary btn-sm edit" type="button" title="Sửa đơn hàng"
-                          @click="editOrder(item.id)">
+                  >
                     <i class="fa fa-edit"></i> Sửa đơn hàng
                   </button>
                   <h1></h1>
                   <button class="btn btn-success btn-sm edit" type="button" title="Sửa đơn hàng"
-                          @click="editOrder(item.id)">
+                          @click="succressOrder(item.id)">
                     <i class="fa fa-edit"></i> Xác nhận đơn hàng
                   </button>
                 </td>
@@ -270,8 +272,26 @@ export default {
         alert("Có lỗi xảy ra khi hủy đơn hàng.");
       }
     },
-    editOrder(orderId) {
+    async succressOrder(orderId) {
       // Logic to edit a specific order
+      console.log(orderId);
+      const token = Cookies.get("authToken"); // Lấy token từ cookies
+      const apiCancel = `http://localhost:8080/admin/orders/sucressorder/${orderId}`; // Đường dẫn API để hủy đơn hàng
+
+      try {
+        const response = await axios.get(apiCancel);
+
+        if (response.status === 200) {
+          alert("Đơn hàng đã được xác nhận thành công!");
+          // Cập nhật lại danh sách đơn hàng
+          this.fetchProducts(this.currentPage, this.pageSize);
+        } else {
+          alert("Không thể xác nhận đơn hàng. Vui lòng thử lại!");
+        }
+      } catch (error) {
+        console.error("Lỗi khi hủy đơn hàng:", error);
+        alert("Có lỗi xảy ra khi hủy đơn hàng.");
+      }
     },
     toggleAllCheckboxes(event) {
       const isChecked = event.target.checked;

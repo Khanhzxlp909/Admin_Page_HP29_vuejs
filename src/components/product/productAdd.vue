@@ -2,14 +2,14 @@
   <div id="app" class="app sidebar-mini rtl">
     <header class="app-header">
       <a
-        class="app-sidebar__toggle"
-        href="#"
-        data-toggle="sidebar"
-        aria-label="Hide Sidebar"
+          class="app-sidebar__toggle"
+          href="#"
+          data-toggle="sidebar"
+          aria-label="Hide Sidebar"
       ></a>
       <ul class="app-nav">
         <li>
-          <a class="app-nav__item" href="/index.html">
+          <a class="app-nav__item" href="/order">
             <i class="bx bx-log-out bx-rotate-180"></i>
           </a>
         </li>
@@ -32,16 +32,16 @@
                 <div class="form-group">
                   <label for="productName">Tên sản phẩm:</label>
                   <select
-                    id="productName"
-                    v-model="product.id"
-                    class="form-control"
-                    @change="setCategory"
-                    required
+                      id="productName"
+                      v-model="product.id"
+                      class="form-control"
+                      @change="setCategory"
+                      required
                   >
                     <option
-                      v-for="item in products"
-                      :key="item.id"
-                      :value="item.id"
+                        v-for="item in products"
+                        :key="item.id"
+                        :value="item.id"
                     >
                       {{ item.name }}
                     </option>
@@ -51,9 +51,9 @@
                   <label>Thương hiệu</label>
                   <select v-model="product.brand" class="form-control" required>
                     <option
-                      v-for="item in brands"
-                      :key="item.id"
-                      :value="item.id"
+                        v-for="item in brands"
+                        :key="item.id"
+                        :value="item.id"
                     >
                       {{ item.name }}
                     </option>
@@ -62,49 +62,49 @@
                 <div class="form-group">
                   <label for="productPrice">Giá:</label>
                   <input
-                    type="number"
-                    id="productPrice"
-                    v-model="product.price"
-                    class="form-control"
-                    required
+                      type="number"
+                      id="productPrice"
+                      v-model="product.price"
+                      class="form-control"
+                      required
                   />
                 </div>
                 <div class="form-group">
                   <label for="productQuantity">Số lượng:</label>
                   <input
-                    type="number"
-                    id="productQuantity"
-                    v-model="product.quantity"
-                    class="form-control"
-                    required
+                      type="number"
+                      id="productQuantity"
+                      v-model="product.quantity"
+                      class="form-control"
+                      required
                   />
                 </div>
                 <div class="form-group">
                   <label for="productQuantity">Trọng lượng:</label>
                   <input
-                    type="text"
-                    id="productQuantity"
-                    v-model="product.weight"
-                    class="form-control"
-                    required
+                      type="text"
+                      id="productQuantity"
+                      v-model="product.weight"
+                      class="form-control"
+                      required
                   />
                 </div>
                 <div class="form-group">
                   <label for="productQuantity">Chất liệu:</label>
                   <input
-                    type="text"
-                    id="productQuantity"
-                    v-model="product.material"
-                    class="form-control"
-                    required
+                      type="text"
+                      id="productQuantity"
+                      v-model="product.material"
+                      class="form-control"
+                      required
                   />
                 </div>
                 <div class="form-group">
                   <label for="productStatus">Tình trạng:</label>
                   <select
-                    id="productStatus"
-                    v-model="product.status"
-                    class="form-control"
+                      id="productStatus"
+                      v-model="product.status"
+                      class="form-control"
                   >
                     <option value="true">Còn hàng</option>
                   </select>
@@ -112,33 +112,14 @@
                 <div class="form-group">
                   <label for="productCategory">Danh mục:</label>
                   <input
-                    type="text"
-                    id="productCategory"
-                    v-model="product.category"
-                    class="form-control"
-                    required
-                    readonly
+                      type="text"
+                      id="productCategory"
+                      v-model="product.category"
+                      class="form-control"
+                      required
+                      readonly
                   />
                 </div>
-                <h1>Upload Image</h1>
-                <input
-                  class="btn btn-info"
-                  type="file"
-                  @change="handleFileUpload"
-                />
-                <button class="btn btn-info" @click="uploadImage">
-                  Upload
-                </button>
-
-                <div v-if="imageUrl">
-                  <h2>Uploaded Image:</h2>
-                  <img
-                    :src="imageUrl"
-                    alt="Uploaded Image"
-                    style="max-width: 300px"
-                  />
-                </div>
-                <br />
                 <button type="submit" class="btn btn-primary">
                   Thêm sản phẩm
                 </button>
@@ -179,39 +160,9 @@ export default {
     this.fetchBrands();
   },
   methods: {
-    handleFileUpload(event) {
-      this.file = event.target.files[0];
-    },
-    async uploadImage() {
-      if (!this.file) {
-        alert("Please select a file to upload");
-        return;
-      }
-
-      try {
-        const formData = new FormData();
-        formData.append("file", this.file);
-
-        const response = await axios.post(
-          "http://localhost:8080/admin/variation/images/upload",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-
-        this.imageUrl = response.data.url; // Đường dẫn ảnh trả về từ backend
-        alert(response.data.message);
-      } catch (error) {
-        console.error("Error uploading file:", error);
-        alert("Failed to upload file");
-      }
-    },
     // Lấy danh sách sản phẩm
     async fetchProducts() {
-      const token = Cookies.get("token");
+      const token = Cookies.get("authToken");
 
       if (!token) {
         console.error("Token không tồn tại trong cookie. Vui lòng đăng nhập.");
@@ -224,26 +175,21 @@ export default {
         console.log("Fetching products với token:", token);
 
         const response = await axios.get(
-          "http://localhost:8080/admin/variation/getproduct",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+            "http://localhost:8080/admin/variation/getproduct");
         this.products = response.data;
 
         console.log("Danh sách sản phẩm:", this.products);
       } catch (error) {
         console.error("Lỗi khi fetch products:", error);
         if (error.response?.status === 401) {
-          alert("Không có quyền truy cập. Vui lòng đăng nhập lại.");
-          this.$router.push("/login");
+          console.log("Không có quyền truy cập. Vui lòng đăng nhập lại.");
+          // this.$router.push("/login");
         } else {
           alert("Không thể tải danh sách sản phẩm.");
         }
       }
-    },
+    }
+    ,
     // Lấy danh sách sản phẩm
     async fetchBrands() {
       const token = Cookies.get("token");
@@ -259,12 +205,12 @@ export default {
         console.log("Fetching products với token:", token);
 
         const response = await axios.get(
-          "http://localhost:8080/admin/category/get",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+            "http://localhost:8080/admin/category/get",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
         );
         this.brands = response.data;
 
@@ -278,12 +224,13 @@ export default {
           alert("Không thể tải danh sách sản phẩm.");
         }
       }
-    },
+    }
+    ,
 
     // Cập nhật danh mục sản phẩm dựa trên ID
     setCategory() {
       const selectedProduct = this.products.find(
-        (product) => product.id === this.product.id
+          (product) => product.id === this.product.id
       );
       if (selectedProduct) {
         this.product.category = selectedProduct.categoryID.id;
@@ -292,7 +239,8 @@ export default {
         console.error("Không tìm thấy sản phẩm với ID:", this.product.id);
         this.product.category = "";
       }
-    },
+    }
+    ,
 
     // Gửi request thêm sản phẩm
     async addProduct() {
@@ -325,14 +273,14 @@ export default {
         console.log("Gửi dữ liệu sản phẩm:", data);
 
         const response = await axios.post(
-          "http://localhost:8080/admin/variation/add",
-          data,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
+            "http://localhost:8080/admin/variation/add",
+            data,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
         );
 
         console.log("Kết quả từ server:", response.data);
@@ -348,7 +296,8 @@ export default {
           alert("Đã xảy ra lỗi khi thêm sản phẩm!");
         }
       }
-    },
+    }
+    ,
   },
 };
 </script>

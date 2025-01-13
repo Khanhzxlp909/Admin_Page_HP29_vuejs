@@ -16,54 +16,42 @@
                 <div class="form-group">
                   <label for="productName">Tên sản phẩm:</label>
                   <input
-                    id="productName"
-                    v-value="product.name"
-                    class="form-control"
-                    required
+                      id="productName"
+                      v-model="product.name"
+                      class="form-control"
+
                   />
                 </div>
                 <div class="form-group">
-                  <label>Thương hiệu</label>
-                  <select v-model="product.brand" class="form-control" required>
-                    <option
-                      v-for="item in brands"
-                      :key="item.id"
-                      :value="item.id"
+                  <label>Danh mục</label>
+                  <select v-model="product.categoryID.id" class="form-control" required>
+                    <option v-for="item in brands"
+                            :key="item.id"
+                            :value="item.id"
                     >
                       {{ item.name }}
                     </option>
                   </select>
                 </div>
-                <div class="form-group">
-                  <label for="productQuantity">Chất liệu:</label>
-                  <input
-                    type="text"
-                    id="productQuantity"
-                    v-model="product.material"
-                    class="form-control"
-                    required
-                  />
-                </div>
                 <h1>Upload Image</h1>
                 <input
-                  class="btn btn-info"
-                  type="file"
-                  @change="handleFileUpload"
+                    class="btn btn-info"
+                    type="file"
+                    @change="handleFileUpload"
                 />
                 <button class="btn btn-info" @click="uploadImage">
                   Upload
                 </button>
-
                 <div v-if="imageUrl">
                   <h2>Uploaded Image:</h2>
                   <img
-                    :src="imageUrl"
-                    alt="Uploaded Image"
-                    style="max-width: 300px"
+                      :src="imageUrl"
+                      alt="Uploaded Image"
+                      style="max-width: 300px"
                   />
                 </div>
-                <br />
-                <button type="submit" class="btn btn-primary">
+                <br/>
+                <button type="submit" @click="uploadImage" class="btn btn-primary">
                   Thêm sản phẩm
                 </button>
               </form>
@@ -85,14 +73,10 @@ export default {
       file: null,
       imageUrl: "",
       product: {
-        id: "",
-        price: 0,
-        quantity: 0,
-        status: true,
-        category: "",
-        brand: "",
-        material: "",
-        weight: "",
+        name: "",
+        categoryID: {
+          id: "",
+        }
       },
       products: [],
       brands: [],
@@ -117,17 +101,18 @@ export default {
         formData.append("file", this.file);
 
         const response = await axios.post(
-          "http://localhost:8080/admin/variation/images/upload",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
+            "http://localhost:8080/admin/variation/images/upload",
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
         );
 
         this.imageUrl = response.data.url; // Đường dẫn ảnh trả về từ backend
-        alert(response.data.message);
+        console.log(response.data.url);
+        localStorage.setItem("urlImages", response.data.url);
       } catch (error) {
         console.error("Error uploading file:", error);
         alert("Failed to upload file");
@@ -148,12 +133,12 @@ export default {
         console.log("Fetching products với token:", token);
 
         const response = await axios.get(
-          "http://localhost:8080/admin/variation/getproduct",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+            "http://localhost:8080/admin/variation/getproduct",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
         );
         this.products = response.data;
 
@@ -183,12 +168,12 @@ export default {
         console.log("Fetching products với token:", token);
 
         const response = await axios.get(
-          "http://localhost:8080/admin/category/get",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+            "http://localhost:8080/admin/category/get",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
         );
         this.brands = response.data;
 
@@ -207,7 +192,7 @@ export default {
     // Cập nhật danh mục sản phẩm dựa trên ID
     setCategory() {
       const selectedProduct = this.products.find(
-        (product) => product.id === this.product.id
+          (product) => product.id === this.product.id
       );
       if (selectedProduct) {
         this.product.category = selectedProduct.categoryID.id;
@@ -223,20 +208,10 @@ export default {
       const token = Cookies.get("token");
       console.log("id category: " + this.product.category);
       const data = {
-        status: true,
-        productID: {
-          id: this.product.id,
-          categoryID: {
-            id: this.product.category,
-          },
-        },
-        quantity: this.product.quantity,
-        material: this.product.material,
-        brandID: {
-          id: this.product.brand,
-        },
-        price: this.product.price + " ₫",
-        weight: this.product.weight,
+        name: this.product.name,
+        categoryID: {
+          id: this.product.categoryID.id,
+        }
       };
       if (!token) {
         console.error("Token không tồn tại hoặc đã hết hạn.");
@@ -249,25 +224,49 @@ export default {
         console.log("Gửi dữ liệu sản phẩm:", data);
 
         const response = await axios.post(
-          "http://localhost:8080/admin/variation/add",
-          data,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
+            "http://localhost:8080/admin/product/saved",
+            data,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
         );
 
-        console.log("Kết quả từ server:", response.data);
+        console.log("Kết quả từ server:", response.data.id);
+        const imagesUrl = localStorage.getItem("urlImages");
+        const dataImages = {
+          product: {
+            id: response.data.id,
+            categoryID: {
+              id: 1,
+            }
+          },
+          cd_Images: imagesUrl,
+          set_Default: true
+        };
+
+        const responses = await axios.post(
+            "http://localhost:8080/admin/variation/images/setproduct",
+            dataImages,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,  // Thêm token vào header
+              },
+            }
+        );
+
+        localStorage.removeItem("urlImages")
+        console.log(responses.data)
         alert("Thêm sản phẩm thành công!");
-        this.$router.push("/product/list");
+        // this.$router.push("/product/list");
       } catch (error) {
         console.error("Lỗi khi thêm sản phẩm:", error);
 
         if (error.response?.status === 401) {
           alert("Token không hợp lệ hoặc hết hạn. Vui lòng đăng nhập lại.");
-          this.$router.push("/login");
+          // this.$router.push("/login");/
         } else {
           alert("Đã xảy ra lỗi khi thêm sản phẩm!");
         }
