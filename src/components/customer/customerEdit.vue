@@ -142,7 +142,11 @@ async saveCustomer() {
   console.log("data: ", data);
   try {
     const url = `http://localhost:8080/admin/customer/update`;
-    await axios.post(url, data);
+    await axios.post(url, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     alert("Cập nhật thông tin khách hàng thành công!");
     this.$router.push("/customer"); // Điều hướng về trang customerList.vue
   } catch (error) {

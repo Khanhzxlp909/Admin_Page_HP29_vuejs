@@ -22,10 +22,10 @@
   <aside class="app-sidebar" v-if="!isWarehouseDetailPage" v-show="isSidebarVisible">
     <div class="app-sidebar__user">
       <img
-        class="app-sidebar__user-avatar"
-        src="../../../public/favicon.ico"
-        width="50px"
-        alt="User Image"
+          class="app-sidebar__user-avatar"
+          src="../../../public/favicon.ico"
+          width="50px"
+          alt="User Image"
       />
       <div>
         <p class="app-sidebar__user-name">
@@ -34,13 +34,13 @@
         <p class="app-sidebar__user-designation">Chào mừng bạn trở lại</p>
       </div>
     </div>
-    <hr />
+    <hr/>
     <ul class="app-menu">
       <li>
         <a
-          class="app-menu__item"
-          href="/order"
-          @click.prevent="navigateTo('order')"
+            class="app-menu__item"
+            href="/order"
+            @click.prevent="navigateTo('order')"
         >
           <i class="app-menu__icon bx bx-cart-alt"></i>
           <span class="app-menu__label">POS Bán Hàng</span>
@@ -117,8 +117,7 @@ export default {
     if (!this.admin || Object.keys(this.admin).length === 0) {
       this.admin = 'Chưa đăng nhập'
       // this.$router.push("/login"); // Chuyển hướng đến trang đăng nhập nếu admin null
-    
-    },
+    }
   },
   methods: {
     toggleSidebar() {
