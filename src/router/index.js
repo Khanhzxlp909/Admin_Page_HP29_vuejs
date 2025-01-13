@@ -8,6 +8,8 @@ import uploadImages from "@/components/product/uploadImagesProduct.vue";
 import productEdit from "@/components/product/productEdit.vue";
 import productAdd from "@/components/product/productAdd.vue";
 import customerList from "@/components/customer/customerList.vue";
+import customerAdd from "@/components/customer/customerAdd.vue";
+import customerEdit from "@/components/customer/customerEdit.vue";
 
 const routes = [
   { path: "/", component: Dashboard },
@@ -19,6 +21,8 @@ const routes = [
   { path: "/product/add", component: productAdd }, // Trang thêm sản phẩm
   { path: "/product/edit/:id", component: productEdit, props: true }, // Trang sửa sản phẩm
   { path: "/customer", component: customerList }, // Trang danh sách khách hàng
+  { path: "/customer/add", component: customerAdd }, // Trang them khách hàng
+  { path: "/customer/edit", component: customerEdit }, // Trang sua thong tin khách hàng
 ];
 
 const router = createRouter({
