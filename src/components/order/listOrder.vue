@@ -4,7 +4,7 @@
       <div class="app-title">
         <ul class="app-breadcrumb breadcrumb side">
           <li class="breadcrumb-item active">
-            <a href="/"><b>Home/</b></a> <a href="#"><b>Danh sách sản phẩm</b></a>
+            <a href="/"><b>Home/</b></a> <a href="#"><b>Danh sách đơn hàng</b></a>
           </li>
         </ul>
         <div id="clock">{{ currentTime }}</div>
@@ -85,11 +85,6 @@
                   <button class="btn btn-primary btn-sm trash" type="button" title="Huỷ đơn hàng"
                           @click="confirmDelete(item.id)">
                     <i class="fas fa-trash-alt"></i> Huỷ đơn hàng
-                  </button>
-                  <h1></h1>
-                  <button class="btn btn-primary btn-sm edit" type="button" title="Sửa đơn hàng"
-                  >
-                    <i class="fa fa-edit"></i> Sửa đơn hàng
                   </button>
                   <h1></h1>
                   <button class="btn btn-success btn-sm edit" type="button" title="Sửa đơn hàng"
@@ -275,7 +270,7 @@ export default {
     async succressOrder(orderId) {
       // Logic to edit a specific order
       console.log(orderId);
-      const token = Cookies.get("authToken"); // Lấy token từ cookies
+      const token = Cookies.get("token"); // Lấy token từ cookies
       const apiCancel = `http://localhost:8080/admin/orders/sucressorder/${orderId}`; // Đường dẫn API để hủy đơn hàng
 
       try {

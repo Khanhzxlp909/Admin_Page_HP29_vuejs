@@ -84,7 +84,7 @@ export default {
   },
   created() {
     this.fetchProducts();
-    this.fetchBrands();
+    this.fetchCategory();
   },
   methods: {
     handleFileUpload(event) {
@@ -154,7 +154,7 @@ export default {
       }
     },
     // Lấy danh sách sản phẩm
-    async fetchBrands() {
+    async fetchCategory() {
       const token = Cookies.get("token");
 
       if (!token) {

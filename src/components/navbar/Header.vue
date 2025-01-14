@@ -47,12 +47,6 @@
         </a>
       </li>
       <li>
-        <a class="app-menu__item" href="/">
-          <i class="app-menu__icon bx bx-tachometer"></i>
-          <span class="app-menu__label">Bảng điều khiển</span>
-        </a>
-      </li>
-      <li>
         <a class="app-menu__item" href="/warehouse">
           <i class="app-menu__icon bx bx-id-card"></i>
           <span class="app-menu__label">Kho hàng</span>
@@ -77,14 +71,20 @@
         </a>
       </li>
       <li>
-        <a class="app-menu__item active" href="/login">
+        <a class="app-menu__item" href="/employee">
           <i class="app-menu__icon bx bx-task"></i>
+          <span class="app-menu__label">Nhân viên</span>
+        </a>
+      </li>
+      <li>
+        <a class="app-menu__item" href="/login">
+          <i class="app-menu__icon bx bx-log-in"></i>
           <span class="app-menu__label">Đăng nhập</span>
         </a>
       </li>
       <li>
         <a class="app-menu__item" @click.prevent="logout" href="#">
-          <i class="app-menu__icon bx bx-cog"></i>
+          <i class="app-menu__icon bx bx-log-out"></i>
           <span class="app-menu__label">Đăng xuất</span>
         </a>
       </li>

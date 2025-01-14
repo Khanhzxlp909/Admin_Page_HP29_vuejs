@@ -28,16 +28,12 @@
         <div class="col-md-12">
           <div class="tile">
             <div class="tile-body">
-              <form @submit.prevent="addProduct">
-                <div class="form-group">
+              <form @submit.prevent="addProduct" class="row">
+                <div class="form-group col-md-3">
                   <label for="productName">Tên sản phẩm:</label>
-                  <select
-                      id="productName"
-                      v-model="product.id"
-                      class="form-control"
-                      @change="setCategory"
-                      required
-                  >
+                  <select id="productName"
+                          v-model="product.id"
+                          class="form-control" @change="setCategory" required>
                     <option
                         v-for="item in products"
                         :key="item.id"
@@ -47,7 +43,7 @@
                     </option>
                   </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group col-md-3">
                   <label>Thương hiệu</label>
                   <select v-model="product.brand" class="form-control" required>
                     <option
@@ -59,9 +55,10 @@
                     </option>
                   </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group col-md-3">
                   <label for="productPrice">Giá:</label>
                   <input
+                      style="width: max-content"
                       type="number"
                       id="productPrice"
                       v-model="product.price"
@@ -69,9 +66,10 @@
                       required
                   />
                 </div>
-                <div class="form-group">
+                <div class="form-group col-md-3">
                   <label for="productQuantity">Số lượng:</label>
                   <input
+                      style="width: max-content"
                       type="number"
                       id="productQuantity"
                       v-model="product.quantity"
@@ -79,7 +77,7 @@
                       required
                   />
                 </div>
-                <div class="form-group">
+                <div class="form-group col-md-3">
                   <label for="productQuantity">Trọng lượng:</label>
                   <input
                       type="text"
@@ -89,7 +87,7 @@
                       required
                   />
                 </div>
-                <div class="form-group">
+                <div class="form-group col-md-3">
                   <label for="productQuantity">Chất liệu:</label>
                   <input
                       type="text"
@@ -99,7 +97,7 @@
                       required
                   />
                 </div>
-                <div class="form-group">
+                <div class="form-group col-md-3">
                   <label for="productStatus">Tình trạng:</label>
                   <select
                       id="productStatus"
@@ -109,7 +107,7 @@
                     <option value="true">Còn hàng</option>
                   </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group col-md-3">
                   <label for="productCategory">Danh mục:</label>
                   <input
                       type="text"
@@ -162,7 +160,7 @@ export default {
   methods: {
     // Lấy danh sách sản phẩm
     async fetchProducts() {
-      const token = Cookies.get("authToken");
+      const token = Cookies.get("token");
 
       if (!token) {
         console.error("Token không tồn tại trong cookie. Vui lòng đăng nhập.");

@@ -66,7 +66,7 @@
                     <input
                       v-model="customer.phone"
                       class="form-control"
-                      type="number"
+                      type="text"
                       id="customerPhone"
                       required
                     />
