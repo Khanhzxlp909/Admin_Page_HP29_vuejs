@@ -210,7 +210,7 @@ export default {
               },
             }
         );
-        this.brands = response.data;
+        this.brands = response.data.content;
 
         console.log("Danh sách sản phẩm:", this.brands);
       } catch (error) {
@@ -283,7 +283,7 @@ export default {
 
         console.log("Kết quả từ server:", response.data);
         alert("Thêm sản phẩm thành công!");
-        this.$router.push("/product/list");
+        this.$router.push("/product");
       } catch (error) {
         console.error("Lỗi khi thêm sản phẩm:", error);
 

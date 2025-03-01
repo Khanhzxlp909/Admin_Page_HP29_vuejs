@@ -1,12 +1,7 @@
 <template>
   <div id="app" class="app sidebar-mini rtl">
     <header class="app-header">
-      <a
-          class="app-sidebar__toggle"
-          href="#"
-          data-toggle="sidebar"
-          aria-label="Hide Sidebar"
-      ></a>
+      <a class="app-sidebar__toggle" href="#" data-toggle="sidebar" aria-label="Hide Sidebar"></a>
       <ul class="app-nav">
         <li>
           <a class="app-nav__item" href="/order">
@@ -20,7 +15,7 @@
       <div class="app-title">
         <ul class="app-breadcrumb breadcrumb side">
           <li class="breadcrumb-item active">
-            <a href="#"><b>Danh sách sản phẩm</b></a>
+            <a href="#"><b>Thêm mới sản phẩm</b></a>
           </li>
         </ul>
         <div id="clock">{{ currentTime }}</div>
@@ -29,24 +24,26 @@
         <div class="col-md-12">
           <div class="tile">
             <div class="tile-body">
-              <form @submit.prevent="addProduct" class="row">
+              <form @submit.prevent="isEditing ? updateProduct() : addProduct()" class="row">
                 <div class="form-group col-md-3">
                   <label for="productName">Tên sản phẩm:</label>
-                  <select id="productName"
-                          v-model="product.id"
-                          class="form-control" @change="setCategory" required>
-                    <option
-                        v-for="item in products"
-                        :key="item.id"
-                        :value="product.id"
-                    >
-                      {{ item.name }} - {{item.categoryID.name}}
+                  <select id="productName" v-model="product.id" class="form-control" @change="setCategory"  >
+                    <option v-for="item in products" :key="item.id" :value="item.id">
+                      {{ item.name }}
+                    </option>
+                  </select>
+                </div>
+                <div class="form-group col-md-3">
+                  <label for="productName">Nhà phân phối:</label>
+                  <select id="productName" v-model="product.suppliers" class="form-control"  >
+                    <option v-for="item in suppliers" :key="item.id" :value="item.id">
+                      {{ item.name }}
                     </option>
                   </select>
                 </div>
                 <div class="form-group col-md-3">
                   <label>Thương hiệu</label>
-                  <select v-model="product.brand" class="form-control" required>
+                  <select v-model="product.brand" class="form-control"  >
                     <option v-for="item in brands" :key="item.id" :value="item.id">
                       {{ item.name }}
                     </option>
@@ -54,107 +51,45 @@
                 </div>
                 <div class="form-group col-md-3">
                   <label for="productPrice">Giá:</label>
-                  <input
-                      style="width: max-content"
-                      type="number"
-                      id="productPrice"
-                      v-model="product.price"
-                      class="form-control"
-                      required
-                  />
+                  <input type="number" id="productPrice" v-model="product.price" class="form-control"   style="width: max-content"/>
                 </div>
                 <div class="form-group col-md-3">
                   <label for="productQuantity">Số lượng:</label>
-                  <input
-                      style="width: max-content"
-                      type="number"
-                      id="productQuantity"
-                      v-model="product.quantity"
-                      class="form-control"
-                      required
-                  />
+                  <input type="number" id="productQuantity" v-model="product.quantity" class="form-control" readonly   style="width: max-content"/>
                 </div>
                 <div class="form-group col-md-3">
                   <label for="productWeight">Trọng lượng:</label>
-                  <input
-                      type="text"
-                      id="productWeight"
-                      v-model="product.weight"
-                      class="form-control"
-                      required
-                  />
+                  <input type="text" id="productWeight" v-model="product.weight" class="form-control"   />
                 </div>
                 <div class="form-group col-md-3">
                   <label for="productMaterial">Chất liệu:</label>
-                  <input
-                      type="text"
-                      id="productMaterial"
-                  v-model="product.material"
-                  class="form-control"
-                  required
-                  />
-                </div>
-                <div class="form-group col-md-3">
-                  <label for="variationstatus">Tình trạng:</label>
-                  <select
-                      id="variationstatus"
-                      v-model="product.status"
-                      class="form-control"
-                  >
-                    <option value="true">Còn hàng</option>
-                  </select>
+                  <input type="text" id="productMaterial" v-model="product.material" class="form-control"   />
                 </div>
                 <div class="form-group col-md-3">
                   <label for="productCategory">Danh mục:</label>
-                  <input
-                      type="text"
-                      id="productCategory"
-                      v-model="product.category"
-                      class="form-control"
-                      required
-                      readonly
-                  />
+                  <input type="text" id="productCategory" v-model="product.categoryName" class="form-control"   readonly />
                 </div>
-                <button type="submit" class="btn btn-primary">
-                  Thêm sản phẩm
-                </button>
+                <br>
+                <button type="submit" class="btn btn-primary">{{ isEditing ? 'Cập nhật biến thể' : 'Thêm biến thể' }}</button>
               </form>
               <div class="row element-button">
                 <div class="col-sm-2">
-                  <button
-                      class="btn btn-add btn-sm"
-                      @click="navigateToAddCategory"
-                      title="Thêm"
-                  >
+                  <button class="btn btn-add btn-sm" @click="navigateToAddCategory" title="Thêm">
                     <i class="fas fa-plus"></i> Tạo mới danh mục
                   </button>
                 </div>
-
                 <div class="col-sm-2">
-                  <button
-                      class="btn btn-add btn-sm"
-                      @click="navigateToAddVariation"
-                      title="Thêm"
-                  >
+                  <button class="btn btn-add btn-sm" @click="navigateToAddVariation" title="Thêm">
                     <i class="fas fa-plus"></i> Tạo mới biến thể
                   </button>
                 </div>
-
                 <div class="col-sm-2">
-                  <button
-                      class="btn btn-add btn-sm"
-                      @click="navigateToAddBrands"
-                      title="Thêm"
-                  >
+                  <button class="btn btn-add btn-sm" @click="navigateToAddBrands" title="Thêm">
                     <i class="fas fa-plus"></i> Tạo mới thương hiệu
                   </button>
                 </div>
                 <div class="col-sm-2">
-                  <button
-                      class="btn btn-add btn-sm"
-                      @click="navigateToAddProduct"
-                      title="Thêm"
-                  >
+                  <button class="btn btn-add btn-sm" @click="navigateToAddProduct" title="Thêm">
                     <i class="fas fa-plus"></i> Tạo mới sản phẩm
                   </button>
                 </div>
@@ -163,16 +98,14 @@
                 <thead>
                 <tr>
                   <th width="10">
-                    <input
-                        type="checkbox"
-                        id="all"
-                        @click="toggleAllCheckboxes"
-                    />
+                    <input type="checkbox" id="all" @click="toggleAllCheckboxes" />
                   </th>
                   <th>Mã sản phẩm</th>
                   <th>Tên sản phẩm</th>
                   <th>Ảnh</th>
                   <th>Số lượng</th>
+                  <th>Đã bán</th>
+                  <th>Nhà phân phối</th>
                   <th>Tình trạng</th>
                   <th>Giá tiền</th>
                   <th>Danh mục</th>
@@ -180,62 +113,38 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="product in variations" :key="product.id">
+                <tr v-for="variation in variations" :key="variation.id">
                   <td width="10">
-                    <input type="checkbox" v-model="product.selected"/>
+                    <input type="checkbox" v-model="variation.selected" />
                   </td>
-                  <td>{{ product.id }}</td>
-                  <td>{{ product.productID.name }}</td>
+                  <td>{{ variation.id }}</td>
+                  <td>{{ variation.productID.name }}</td>
                   <td>
-                    <img
-                        :src="getDefaultImageUrl(product.productID.imagesDTOS)"
-                        alt=""
-                        width="70px;"
-                    />
+                    <img :src="getDefaultImageUrl(variation.productID.imagesDTOS)" alt="" width="70px;" />
                   </td>
-                  <td>{{ product.quantity }}</td>
+                  <td>{{ variation.quantity }}</td>
+                  <td>{{ variation.sold }}</td>
+                  <td>{{ variation.supplier.name }}</td>
                   <td>
-                      <span
-                          :class="{
-                          'badge bg-success': product.status,
-                          'badge bg-danger': !product.status,
-                        }"
-                      >{{ product.status ? "Còn hàng" : "Hết hàng" }}</span
-                      >
+                      <span :class="{'badge bg-success': variation.status, 'badge bg-danger': !variation.status}">
+                        {{ variation.status ? "Còn hàng" : "Hết hàng" }}
+                      </span>
                   </td>
-                  <td>{{ product.price }}</td>
-                  <td>{{ product.productID.categoryID.name }}</td>
+                  <td>{{ variation.price }}</td>
+                  <td>{{ variation.productID.categoryID.name }}</td>
                   <td>
-                    <button
-                        class="btn btn-edit"
-                        @click="editVariation(product)"
-                    >
-                      Sửa
-                    </button>
-                    <button
-                        class="btn btn-delete"
-                        @click="confirmDelete(product)"
-                    >
-                      Xóa
-                    </button>
+                    <button class="btn btn-edit" @click="editVariation(variation,variation.id)">Sửa</button>
+                    <button class="btn btn-delete" @click="confirmDelete(variation)">Xóa</button>
                   </td>
                 </tr>
                 </tbody>
               </table>
               <div class="pagination">
-                <button
-                    class="page-button"
-                    :disabled="currentPage === 0"
-                    @click="changePage(currentPage - 1)"
-                >
+                <button class="page-button" :disabled="currentPage === 0" @click="changePage(currentPage - 1)">
                   Previous
                 </button>
                 <span>Page {{ currentPage + 1 }} of {{ totalPages }}</span>
-                <button
-                    class="page-button"
-                    :disabled="currentPage >= totalPages - 1"
-                    @click="changePage(currentPage + 1)"
-                >
+                <button class="page-button" :disabled="currentPage >= totalPages - 1" @click="changePage(currentPage + 1)">
                   Next
                 </button>
               </div>
@@ -249,64 +158,207 @@
 
 <script>
 import axios from "axios";
-import Cookies from "js-cookie"; // Import thư viện js-cookie
+import Cookies from "js-cookie";
 
 export default {
   data() {
     return {
       currentTime: "",
-      currentPage: 0, // Số trang hiện tại
-      pageSize: 10, // Số sản phẩm mỗi trang
-      totalPages: 0, // Tổng số trang
-      variations: [], // Dữ liệu sản phẩm
+      currentPage: 0,
+      pageSize: 10,
+      totalPages: 0,
+      variations: [],
       products: [],
-      brands:[],
+      brands: [],
+      suppliers: [],
+      variationID: "",
       product: {
         id: "",
         price: 0,
         quantity: 0,
         status: true,
         category: "",
+        categoryName: "",
         brand: "",
+        suppliers: "",
         material: "",
         weight: "",
       },
-      selectedProduct: {
-        code: "",
-        name: "",
-        quantity: "",
-        status: "",
-        price: "",
-        category: "",
-      },
+      isEditing: false, // New property to track if we are editing
     };
   },
+  created() {
+    this.updateTime();
+    this.fetchVariations(this.currentPage, this.pageSize);
+    this.fetchProducts();
+    this.fetchBrands();
+    this.fetchSuppliers();
+  },
   methods: {
+    isEmpty(value) {
+      return value == null || value.toString().trim() === "";
+    },
+
+    validateForm() {
+      // Kiểm tra trường 'Tên sản phẩm'
+      if (this.isEmpty(this.product.id)) {
+        alert("Tên sản phẩm không được để trống!");
+        return false;
+      }
+      if (this.product.id.length > 25) {
+        alert("Tên sản phẩm không được quá 25 ký tự!");
+        return false;
+      }
+
+      // Kiểm tra thương hiệu
+      if (this.isEmpty(this.product.brand)) {
+        alert("Thương hiệu sản phẩm không được để trống!");
+        return false;
+      }
+      if (this.product.brand.length > 50) {
+        alert("Thương hiệu sản phẩm không được quá 50 ký tự!");
+        return false;
+      }
+
+      // Kiểm tra danh mục sản phẩm
+      if (this.isEmpty(this.product.category)) {
+        alert("Danh mục sản phẩm không được để trống!");
+        return false;
+      }
+
+      // Kiểm tra nhà phân phối
+      if (this.isEmpty(this.product.suppliers)) {
+        alert("Nhà phân phối sản phẩm không được để trống!");
+        return false;
+      }
+
+      // Kiểm tra giá sản phẩm
+      if (this.isEmpty(this.product.price)) {
+        alert("Giá sản phẩm không được để trống!");
+        return false;
+      }
+      if (isNaN(this.product.price) || this.product.price <= 0) {
+        alert("Giá sản phẩm phải là số lớn hơn 0!");
+        return false;
+      }
+
+      // Kiểm tra trọng lượng
+      if (this.isEmpty(this.product.weight)) {
+        alert("Trọng lượng không được để trống!");
+        return false;
+      }
+      if (this.product.weight.length > 25) {
+        alert("Trọng lượng không được quá 25 ký tự!");
+        return false;
+      }
+
+      // Kiểm tra chất liệu
+      if (this.isEmpty(this.product.material)) {
+        alert("Chất liệu không được để trống!");
+        return false;
+      }
+      if (this.product.material.length > 25) {
+        alert("Chất liệu không được quá 25 ký tự!");
+        return false;
+      }
+
+      return true; // Nếu tất cả điều kiện đều hợp lệ
+    },
+
     navigateToAddCategory() {
-      this.$router.push("/category"); // Chuyển hướng đến `productAdd.vue`
+      this.$router.push("/category");
     },
     navigateToAddVariation() {
-      this.$router.push("/product/add"); // Chuyển hướng đến `productAdd.vue`
+      this.$router.push("/product/add");
     },
     navigateToAddBrands() {
-      this.$router.push("/brands"); // Chuyển hướng đến `productAdd.vue`
+      this.$router.push("/brands");
     },
     navigateToAddProduct() {
-      this.$router.push("/addproduct"); // Chuyển hướng đến `productAdd.vue`
+      this.$router.push("/addproduct");
     },
-    editVariation(variation) {
-      this.product = { ...variation }; // Copy dữ liệu để chỉnh sửa
+
+    editVariation(variation, variationID) {
+      this.variationID = variationID;
+      this.product.id = variation.productID.id;          // Set cho Selectbox Tên sản phẩm
+      this.product.brand = variation.brandID.id;         // Set cho Selectbox Thương hiệu
+      this.product.suppliers = variation.supplier.id;         // Set cho Selectbox Thương hiệu
+      this.product.price = this.parsePrice(variation.price);  // Set giá
+      this.product.quantity = variation.quantity;        // Set số lượng
+      this.product.weight = variation.weight;            // Set trọng lượng
+      this.product.material = variation.material;        // Set chất liệu
+      this.product.status = variation.status;            // Set tình trạng
+      this.product.category = variation.productID.categoryID.id; // Set danh mục
+      this.product.categoryName = variation.productID.categoryID.name; // Set danh mục
+
+      this.isEditing = true; // Bật chế độ chỉnh sửa
     },
-    // Lấy danh sách sản phẩm
-    fetchvariations(page = 0, size = 10) {
+    parsePrice(priceString) {
+      // Chuyển đổi giá từ chuỗi sang số
+      return parseFloat(priceString.replace(/\./g, '').replace(' ₫', ''));
+    },
+    async updateProduct() {
+      if (!this.validateForm()) {
+        return; // Nếu validate không thành công, dừng xử lý
+      }
+      const token = Cookies.get("authToken");
+      const data = {
+        id: this.variationID,
+        status: true,
+        productID: {
+          id: this.product.id,
+          categoryID: {
+            id: this.product.category,
+          },
+        },
+        quantity: this.product.quantity,
+        material: this.product.material,
+        brandID: {
+          id: this.product.brand,
+        },
+        supplier: {
+          id: this.product.suppliers,
+        },
+        price: this.product.price + " ₫",
+        weight: this.product.weight,
+      };
+      console.log(data);
+      if (!token) {
+        alert("Bạn cần đăng nhập để tiếp tục.");
+        this.$router.push("/login");
+        return;
+      }
+      try {
+        const response = await axios.post(`http://localhost:8080/admin/variation/update`, data, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        alert("Cập nhật sản phẩm thành công!");
+        this.product.id = "";
+        this.product.price = 0;
+        this.product.quantity = 0;
+        this.product.status = true;
+        this.product.category = "";
+        this.product.brand = "";
+        this.product.material = "";
+        this.product.weight = "";
+
+        this.isEditing = false; // Reset editing mode
+        this.fetchVariations(this.currentPage, this.pageSize); // Refresh the variations list
+      } catch (error) {
+        console.error("Lỗi khi cập nhật sản phẩm:", error);
+        alert("Đã xảy ra lỗi khi cập nhật sản phẩm!");
+      }
+    },
+    fetchVariations(page = 0, size = 10) {
       axios
-          .get(
-              `http://localhost:8080/admin/variation/result/all?page=${page}&size=${size}`
-          )
+          .get(`http://localhost:8080/admin/variation/result/all?page=${page}&size=${size}`)
           .then((response) => {
             this.variations = response.data.content;
             this.totalPages = response.data.page.totalPages;
-            console.log(response.data.content);
+            console.log(this.variations)
           })
           .catch((error) => {
             console.error("Có lỗi xảy ra khi lấy dữ liệu sản phẩm:", error);
@@ -314,47 +366,35 @@ export default {
     },
     getDefaultImageUrl(imagesDTOS) {
       if (imagesDTOS && imagesDTOS.length > 0) {
-        const defaultImage = imagesDTOS.find((image) => image.set_Default); // Tìm ảnh có set_Default = true
-        return defaultImage
-            ? `http://localhost:8080/images/${defaultImage.cd_Images}`
-            : "/img/default.jpg";
+        const defaultImage = imagesDTOS.find((image) => image.set_Default);
+        return defaultImage ? `http://localhost:8080/images/${defaultImage.cd_Images}` : "/img/default.jpg";
       }
-      return "/img/default.jpg"; // Trường hợp không có hình ảnh
+      return "/img/default.jpg";
     },
-    // Xóa sản phẩm
     deleteProduct(productId) {
-      const token = Cookies.get("token"); // Lấy token từ cookies
+      const token = Cookies.get("token");
 
       if (!token) {
         alert("Token không hợp lệ hoặc không tồn tại.");
         return;
       }
-      const apiurl =
-          "http://localhost:8080/admin/variation/delete/" + productId;
-      console.log(token);
-      console.log(apiurl);
+      const apiurl = "http://localhost:8080/admin/variation/delete/" + productId;
       axios
           .get(apiurl, {
             headers: {
-              Authorization: `Bearer ${token}`, // Thêm token vào header Authorization
+              Authorization: `Bearer ${token}`,
             },
           })
           .then((response) => {
-            // Sau khi xóa thành công, tải lại danh sách sản phẩm
-            this.fetchvariations(this.currentPage, this.pageSize);
+            this.fetchVariations(this.currentPage, this.pageSize);
           })
           .catch((error) => {
             console.error("Có lỗi xảy ra khi xóa sản phẩm:", error);
           });
     },
-    // Xử lý xóa sản phẩm
-    confirmDelete(product) {
-      if (
-          confirm(
-              `Bạn có chắc chắn muốn xóa sản phẩm "${product.productID.name}"?`
-          )
-      ) {
-        this.deleteProduct(product.id);
+    confirmDelete(variation) {
+      if (confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${variation.productID.name}"?`)) {
+        this.deleteProduct(variation.id);
       }
     },
     updateTime() {
@@ -370,101 +410,89 @@ export default {
       };
       this.currentTime = today.toLocaleDateString("vi-VN", options);
     },
-    // Chuyển trang
     changePage(page) {
       this.currentPage = page;
-      this.fetchvariations(page, this.pageSize);
-    },
-    editProduct(product) {
-      this.$router.push({path: `/product/edit/${product.id}`}); // Chuyển đến trang chỉnh sửa sản phẩm
+      this.fetchVariations(page, this.pageSize);
     },
     toggleAllCheckboxes() {
-      const allChecked = this.variations.every((product) => product.selected);
-      this.variations.forEach((product) => (product.selected = !allChecked));
+      const allChecked = this.variations.every((variation) => variation.selected);
+      this.variations.forEach((variation) => (variation.selected = !allChecked));
     },
     async fetchProducts() {
       const token = Cookies.get("token");
 
       if (!token) {
-        console.error("Token không tồn tại trong cookie. Vui lòng đăng nhập.");
         alert("Bạn cần đăng nhập để tiếp tục.");
         this.$router.push("/login");
         return;
       }
 
       try {
-        console.log("Fetching products với token:", token);
-
-        const response = await axios.get(
-            "http://localhost:8080/admin/variation/getproduct");
+        const response = await axios.get("http://localhost:8080/admin/variation/getproduct");
         this.products = response.data;
-
-        console.log("Danh sách sản phẩm:", this.products);
       } catch (error) {
         console.error("Lỗi khi fetch products:", error);
-        if (error.response?.status === 401) {
-          console.log("Không có quyền truy cập. Vui lòng đăng nhập lại.");
-          // this.$router.push("/login");
-        } else {
-          alert("Không thể tải danh sách sản phẩm.");
-        }
+        alert("Không thể tải danh sách sản phẩm.");
       }
     },
-    // Lấy danh sách sản phẩm
     async fetchBrands() {
       const token = Cookies.get("token");
 
       if (!token) {
-        console.error("Token không tồn tại trong cookie. Vui lòng đăng nhập.");
         alert("Bạn cần đăng nhập để tiếp tục.");
         this.$router.push("/login");
         return;
       }
 
       try {
-        console.log("Fetching brands với token:", token);
-
-        const response = await axios.get(
-            "http://localhost:8080/admin/brands/get",
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-        );
-        this.brands = response.data;
-
-        console.log("Danh sách thương hiệu:", this.brands); // Kiểm tra dữ liệu
+        const response = await axios.get("http://localhost:8080/admin/brands/get", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        this.brands = response.data.content;
       } catch (error) {
         console.error("Lỗi khi fetch brands:", error);
-        if (error.response?.status === 401) {
-          alert("Không có quyền truy cập. Vui lòng đăng nhập lại.");
-          this.$router.push("/login");
-        } else {
-          alert("Không thể tải danh sách thương hiệu.");
-        }
+        alert("Không thể tải danh sách thương hiệu.");
+      }
+    },
+    async fetchSuppliers() {
+      const token = Cookies.get("token");
+
+      if (!token) {
+        alert("Bạn cần đăng nhập để tiếp tục.");
+        this.$router.push("/login");
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://localhost:8080/admin/warehouse/suppiller/get", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        this.suppliers = response.data;
+      } catch (error) {
+        console.error("Lỗi khi fetch suppliers:", error);
+        alert("Không thể tải danh sách nhà phân phối.");
       }
     },
     setCategory() {
-      const selectedProduct = this.products.find(
-          (product) => product.id === this.product.id
-      );
+      const selectedProduct = this.products.find((product) => product.id === this.product.id);
       if (selectedProduct) {
         this.product.category = selectedProduct.categoryID.id;
-        console.log("Danh mục đã được cập nhật:", this.product.category);
+        this.product.categoryName = selectedProduct.categoryID.name;
       } else {
-        console.error("Không tìm thấy sản phẩm với ID:", this.product.id);
         this.product.category = "";
       }
-    }
-    ,
-
-    // Gửi request thêm sản phẩm
+    },
     async addProduct() {
+      if (!this.validateForm()) {
+        return; // Nếu validate không thành công, dừng xử lý
+      }
       const token = Cookies.get("token");
-      console.log("id category: " + this.product.category);
       const data = {
-        status: true,
+        status: false,
         productID: {
           id: this.product.id,
           categoryID: {
@@ -473,6 +501,9 @@ export default {
         },
         quantity: this.product.quantity,
         material: this.product.material,
+        supplier: {
+          id: this.product.suppliers,
+        },
         brandID: {
           id: this.product.brand,
         },
@@ -480,50 +511,46 @@ export default {
         weight: this.product.weight,
       };
       if (!token) {
-        console.error("Token không tồn tại hoặc đã hết hạn.");
         alert("Bạn cần đăng nhập để tiếp tục.");
         this.$router.push("/login");
         return;
       }
 
       try {
-        console.log("Gửi dữ liệu sản phẩm:", data);
-
-        const response = await axios.post(
-            "http://localhost:8080/admin/variation/add",
-            data,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-        );
-
-        console.log("Kết quả từ server:", response.data);
+        const response = await axios.post("http://localhost:8080/admin/variation/add", data, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
         alert("Thêm sản phẩm thành công!");
-        location.reload();
+        this.fetchVariations(this.currentPage, this.pageSize);
       } catch (error) {
         console.error("Lỗi khi thêm sản phẩm:", error);
-
-        if (error.response?.status === 401) {
-          alert("Token không hợp lệ hoặc hết hạn. Vui lòng đăng nhập lại.");
-          this.$router.push("/login");
-        } else {
-          alert("Đã xảy ra lỗi khi thêm sản phẩm!");
-        }
+        alert("Đã xảy ra lỗi khi thêm sản phẩm!");
       }
     },
   },
-  mounted() {
-    this.updateTime();
-    this.fetchvariations(this.currentPage, this.pageSize);
-    this.fetchProducts();
-    this.fetchBrands();
-  },
 };
 </script>
+
 <style>
+.form-group {
+  margin-bottom: 20px;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
 .pagination {
   display: flex;
   justify-content: center;

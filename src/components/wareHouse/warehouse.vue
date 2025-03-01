@@ -43,6 +43,14 @@
                   <router-link class="btn btn-cancel" to="/orders">Hủy bỏ</router-link>
                 </div>
               </form>
+              <div class="row element-button">
+                <div class="col-sm-2">
+                  <button class="btn btn-add btn-sm" @click="" title="Thêm">
+                    <i class="fas fa-plus"></i> Tạo mới nhà phân phối
+                  </button>
+                </div>
+
+              </div>
             </div>
             <div class="du--lieu-san-pham">
               <table class="table table-hover table-bordered">
@@ -71,7 +79,7 @@
                   <td>{{ item.creation_date }}</td>
                   <td>{{ item.code_Inventory }}</td>
                   <td>
-                    <button class="btn btn-primary" @click="viewOrderDetails(item.id,item.supplier.id, item.employee.name, item.note)">
+                    <button class="btn btn-primary" @click="viewOrderDetails(item.id, item.supplier.id)">
                       Nhập sản phẩm
                     </button>
                   </td>
@@ -122,18 +130,13 @@ export default {
       // Định dạng giá thành chuỗi
       return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " ₫";
     },
-    viewOrderDetails(id, suppiller, employee, note) {
-
+    async viewOrderDetails(id, supplierId) {
+      console.log(id, supplierId);
+      // this.$router.push(`/warehouse/warehouseDetails?id=${id}&supplierId=${supplierId}`);
       this.$router.push({
-            path: `/warehouse/warehouseDetails?id=${id}`,
-            state: {
-              warehouse: {
-                suppiller: suppiller,
-                employee:   employee,
-                note: note
-              }}
-          }
-      );
+        path: '/warehouse/warehouseDetails',
+        query: {id, supplierId}
+      });
     },
     async fetchProducts() {
       try {

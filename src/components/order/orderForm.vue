@@ -119,23 +119,18 @@
           <div class="tile">
             <h3 class="tile-title">Thông tin thanh toán</h3>
             <div class="row">
-              <div class="form-group col-md-10">
-                <label class="control-label">Họ tên khách hàng</label>
+              <div class="form-group col-md-12">
+                <label class="control-label">Khách hàng </label>
                 <select class="form-control" v-model="selectedCustomer">
-                  <option v-for="customer in customers" :key="customer.id" :value="customer">
+                  <option v-for="customer in sortedCustomers" :key="customer.id" :value="customer">
                     {{ customer.name }}
                   </option>
                 </select>
               </div>
-              <div class="form-group col-md-2">
-                <label style="text-align: center;" class="control-label">Tạo mới</label>
-                <button class="btn btn-primary btn-them" data-toggle="modal" data-target="#exampleModalCenter">
-                  <i class="fas fa-user-plus"></i>
-                </button>
-              </div>
               <div class="form-group col-md-12">
                 <label class="control-label">Voucher</label>
-                <input class="form-control" id="voucher" ref="voucher" v-model="codevoucher" @input="getVoucher()" type="text"
+                <input class="form-control" id="voucher" ref="voucher" v-model="codevoucher" @input="getVoucher()"
+                       type="text"
                        placeholder="Nhập mã voucher">
               </div>
               <div class="form-group col-md-12">
@@ -174,13 +169,6 @@
                 <label class="control-label">Khách hàng còn nợ: </label>
                 <p class="control-all-money"> {{ formatPrice(changeDue) }} VNĐ</p>
               </div>
-              <div class="form-group col-md-6">
-                <label class="control-label">Hình thức thanh toán</label>
-                <select class="form-control" v-model="status" required>
-                  <option value="1">Chờ thanh toán</option>
-                  <option value="2">Đã thanh toán</option>
-                </select>
-              </div>
               <div class="tile-footer col-md-12">
                 <button class="btn btn-primary luu-san-pham" type="button" @click="saveOrder">Lưu đơn hàng (F9)</button>
                 <button class="btn btn-primary luu-va-in" type="button" @click="saveAndPrint">Lưu và in hóa đơn (F10)
@@ -204,6 +192,7 @@ export default {
     return {
       products: [],
       customers: [],
+      default_customer: {},
       cart: [],
       selectedEmployee: '',
       currentPage: 0, // Số trang hiện tại
@@ -214,13 +203,6 @@ export default {
       paymentMethod: '',
       discount: 0,
       amountReceived: 0,
-      newCustomer: {
-        name: '',
-        address: '',
-        email: '',
-        birthDate: '',
-        phone: ''
-      }
     };
   },
   computed: {
@@ -235,6 +217,12 @@ export default {
     },
     changeDue() {
       return this.amountReceived - this.finalAmount;
+    },
+    sortedCustomers() {
+      if (!this.customers.length) return [];
+      const lastCustomer = this.customers[this.customers.length - 1]; // Lấy phần tử cuối cùng
+      const remainingCustomers = this.customers.slice(0, -1); // Lấy các phần tử còn lại
+      return [lastCustomer, ...remainingCustomers]; // Đưa phần tử cuối lên đầu
     }
   },
   mounted() {
@@ -249,6 +237,11 @@ export default {
       const searchKeyword = this.$refs.myInput.value; // Lấy giá trị từ ô tìm kiếm
       console.log(searchKeyword);
       try {
+        if (!searchKeyword.trim()) {
+          // Nếu input tìm kiếm bị xóa trắng, gọi fetchProducts để lấy lại toàn bộ sản phẩm
+          return this.fetchProducts(this.currentPage, this.pageSize);
+        }
+
         const response = await axios.get(`http://localhost:8080/MiniatureCrafts/result/${searchKeyword}`);
         this.products = [...response.data.content];
         console.log("Dữ liệu sản phẩm:", this.products);
@@ -256,9 +249,10 @@ export default {
         console.error("Lỗi khi lấy sản phẩm:", error);
       }
     },
+
     async fetchProducts(page, size) {
       try {
-        const response = await axios.get(`http://localhost:8080/admin/variation/result/all?page=${page}&size=${size}`);
+        const response = await axios.get(`http://localhost:8080/admin/variation/get/all?page=${page}&size=${size}`);
         this.products = response.data.content; // Lấy danh sách sản phẩm
         this.totalPages = response.data.page.totalPages; // Tổng số trang
         console.log("Dữ liệu sản phẩm:", this.products);
@@ -269,20 +263,13 @@ export default {
     async getCustomer() {
       try {
         const response = await axios.get(`http://localhost:8080/admin/customer/result/all`);
-        console.log(response.data);
         this.customers = response.data;
-      } catch (error) {
-        // Xử lý lỗi chi tiết
-        if (error.response) {
-          // Nếu lỗi từ server
-          console.error("Lỗi từ server:", error.response.status, error.response.data);
-        } else if (error.request) {
-          // Nếu không nhận được phản hồi từ server
-          console.error("Không nhận được phản hồi từ server:", error.request);
-        } else {
-          // Lỗi khác
-          console.error("Có lỗi xảy ra:", error.message);
+
+        if (this.customers.length > 0) {
+          this.selectedCustomer = this.customers[this.customers.length - 1]; // Gán phần tử cuối cùng
         }
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách khách hàng:", error);
       }
     },
     async getVoucher() {
@@ -320,8 +307,16 @@ export default {
     },
     addToCart(product) {
       const existingProduct = this.cart.find(item => item.id === product.id);
+      console.log(product.quantity)
       if (existingProduct) {
-        existingProduct.quantity += 1;  // Tăng số lượng nếu sản phẩm đã có
+        if (existingProduct.quantity >= product.quantity) {
+          // Tăng số lượng nếu sản phẩm đã có
+          alert("Không thể thêm quá số lượng sản phẩm hiện có")
+          return;
+        } else {
+          existingProduct.quantity += 1;
+        }
+
       } else {
         this.cart.push({...product, quantity: 1});  // Thêm mới nếu chưa có
       }
@@ -355,6 +350,12 @@ export default {
         return;
       }
 
+      // Kiểm tra xem khách hàng đã được chọn chưa
+      if (!this.selectedCustomer || !this.selectedCustomer.id) {
+        alert("Vui lòng chọn khách hàng!");
+        return;
+      }
+
       // Tạo dữ liệu đơn hàng theo cấu trúc JSON mẫu
       const orderData = {
         customerID: {
@@ -366,7 +367,7 @@ export default {
           id: this.paymentMethod // Phương thức thanh toán
         },
         status: this.status, // Trạng thái đơn hàng (có thể thay đổi theo logic của bạn)
-        type_Oder: "1", // Loại đơn hàng (có thể thay đổi theo logic của bạn)
+        type_Oder: "", // Loại đơn hàng (có thể thay đổi theo logic của bạn)
         orderLine: this.cart.map(item => ({
           variationID: {
             id: item.id
@@ -374,7 +375,7 @@ export default {
           quantity: item.quantity // Số lượng
         })),
       };
-
+      console.log(orderData)
       try {
         const token = Cookies.get("token"); // Lấy token từ cookies
         const response = await axios.post("http://localhost:8080/admin/orders/newOrder", orderData, {
@@ -391,26 +392,20 @@ export default {
           this.orderNote = '';
           this.paymentMethod = '';
           this.selectedCustomer = null; // Reset khách hàng đã chọn
-          this.newCustomer = { // Reset thông tin khách hàng
-            name: '',
-            address: '',
-            email: '',
-            birthDate: '',
-            phone: ''
-          };
+
+        } else if (response.status === 400) {
+          console.error("Lỗi khi lưu đơn hàng:", error);
+          alert("Đơn hàng thiếu phương thức thanh toán hoặc khách hàng!");
         } else {
           alert("Không thể lưu đơn hàng. Vui lòng thử lại!");
         }
       } catch (error) {
         console.error("Lỗi khi lưu đơn hàng:", error);
-        alert("Có lỗi xảy ra. Vui lòng thử lại!");
+        alert("Đơn hàng thiếu phương thức thanh toán hoặc khách hàng!");
       }
     },
     saveAndPrint() {
       // Implement save and print functionality
-    },
-    saveCustomer() {
-      // Implement save customer functionality
     },
     calculateChange() {
       // Implement change calculation

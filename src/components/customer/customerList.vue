@@ -116,6 +116,18 @@
           <div class="tile">
             <h3 class="tile-title">Danh sách khách hàng</h3>
             <div class="tile-body">
+              <div class="form-group col-md-4">
+                <label for="searchCustomer">Tìm kiếm:</label>
+                <input
+                    v-model="findCustomer"
+                    @input="searchCustomer"
+                    class="form-control"
+                    type="text"
+                    id="searchCustomer"
+                    placeholder="Nhập tên khách hàng..."
+                />
+              </div>
+
               <div class="row element-button">
                 <div class="col-sm-2">
                   <router-link
@@ -142,6 +154,7 @@
                   <th>Ngày tạo</th>
                   <th>SĐT</th>
                   <th>Ghi chú</th>
+                  <th>Trạng thái</th>
                   <th width="100">Tính năng</th>
                 </tr>
                 </thead>
@@ -152,6 +165,11 @@
                   <td @click="goToEdit(customer.id)">{{ customer.address }}</td>
                   <td @click="goToEdit(customer.id)">{{ customer.creation_date }}</td>
                   <td @click="goToEdit(customer.id)">{{ customer.phone }}</td>
+                  <td @click="goToEdit(customer.id)">
+                    <span :class="{'badge bg-success': customer.status, 'badge bg-danger': !customer.status}">
+                        {{ customer.status ? "Đang hoạt động" : "Không hoạt động" }}
+                      </span>
+                  </td>
                   <td @click="goToEdit(customer.id)">{{ customer.note }}</td>
                   <td class="table-td-center">
                     <button
@@ -201,7 +219,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from "vue";
+import {ref, computed, onMounted} from "vue";
 import axios from "axios";
 import Cookies from "js-cookie";
 
@@ -220,6 +238,25 @@ export default {
     const currentPage = ref(1);
     const itemsPerPage = ref(5);
     const totalItems = ref(0);
+
+    const findCustomer = ref(""); // Biến lưu giá trị tìm kiếm
+
+    const searchCustomer = async () => {
+      if (findCustomer.value.trim() === "") {
+        fetchCustomers(); // Nếu rỗng, load lại toàn bộ danh sách
+        return;
+      }
+
+      try {
+        const response = await axios.get(`http://localhost:8080/admin/customer/result/${findCustomer.value}`);
+
+        customers.value = response.data; // Cập nhật danh sách tìm kiếm
+        totalItems.value = customers.value.length;
+      } catch (error) {
+        console.error("Lỗi khi tìm kiếm khách hàng:", error);
+        alert("Không thể tìm kiếm khách hàng.");
+      }
+    };
 
     const fetchCustomers = async () => {
       try {
@@ -319,16 +356,14 @@ export default {
       confirmDelete,
       goToEdit,
       submitForm,
+      findCustomer,   // Thêm biến tìm kiếm
+      searchCustomer, // Thêm hàm tìm kiếm
     };
   },
 };
 </script>
 
 <style scoped>
-/* Add custom styles if necessary */
-.container {
-  padding: 20px;
-}
 
 .pagination {
   display: flex;

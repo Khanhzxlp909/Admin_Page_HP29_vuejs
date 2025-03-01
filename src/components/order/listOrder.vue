@@ -55,7 +55,8 @@
               <tr>
                 <th>ID đơn hàng</th>
                 <th>Khách hàng</th>
-                <th>Code voucher</th>
+                <th>Địa chỉ</th>
+                <th>Số điện thoại</th>
                 <th>Phương thức thanh toán</th>
                 <th>Ghi chú</th>
                 <th>Tổng tiền</th>
@@ -67,7 +68,8 @@
               <tr v-for="item in orders" :key="item.id" @click="viewOrderDetails(item.id)">
                 <td>{{ item.id }}</td>
                 <td>{{ item.customerID.name }}</td>
-                <td>{{ item.code_Voucher }}</td>
+                <td>{{ item.address }}</td>
+                <td>{{ item.customerID.phone }}</td>
                 <td>{{ item.paymentMethod.note }}</td>
                 <td>{{ item.note }}</td>
                 <td>{{ formatPrice(item.total_Payment) }}</td>
@@ -75,20 +77,29 @@
                   <span :class="{
                       'badge bg-danger': item.status === 0,
                       'badge bg-warning': item.status === 1,
-                      'badge bg-success': item.status === 2
+                      'badge bg-success': item.status === 2,
+                      'badge bg-info': item.status === 3
                     }">
-                    {{ item.status === 0 ? "Đã Hủy" : item.status === 1 ? "Đang chờ xác nhận" : "Đã xác nhận" }}
+                    {{ item.statusText }}
                   </span>
 
                 </td>
                 <td>
-                  <button class="btn btn-primary btn-sm trash" type="button" title="Huỷ đơn hàng"
-                          @click="confirmDelete(item.id)">
+                  <button
+                      class="btn btn-primary btn-sm trash"
+                      type="button"
+                      @click="confirmDelete(item.id)"
+                      v-if="item.status !== 2  && item.status !== 3"
+                  >
                     <i class="fas fa-trash-alt"></i> Huỷ đơn hàng
                   </button>
                   <h1></h1>
-                  <button class="btn btn-success btn-sm edit" type="button" title="Sửa đơn hàng"
-                          @click="succressOrder(item.id)">
+                  <button
+                      class="btn btn-success btn-sm edit"
+                      type="button"
+                      @click="succressOrder(item.id)"
+                      v-if="item.status !== 2  && item.status !== 3"
+                  >
                     <i class="fa fa-edit"></i> Xác nhận đơn hàng
                   </button>
                 </td>
@@ -133,8 +144,8 @@
                 <tr>
                   <th class="so--luong">Mã hàng</th>
                   <th class="so--luong">Tên sản phẩm</th>
-                  <th class="so--luong" width="10">Ảnh</th>
                   <th class="so--luong">Số lượng</th>
+                  <th class="so--luong">Đơn giá</th>
                   <th class="so--luong">Giá bán</th>
                   <th class="so--luong text-center">Chủng loại</th>
                 </tr>
@@ -146,13 +157,10 @@
                 <tr v-for="orderDetails in orderDetails" :key="orderDetails">
                   <td>{{ orderDetails.variationID.sku }}</td>
                   <td>{{ orderDetails.variationName }}</td>
-                  <td>
-                    <!--                    <img :src="getDefaultImageUrl(product.productID.imagesDTOS)" alt="" width="70px"/>-->
-                  </td>
                   <td>{{ orderDetails.quantity }}</td>
                   <td>{{ formatPrice(orderDetails.unit_Price) }}</td>
                   <td>{{ formatPrice(orderDetails.price) }}</td>
-                  <!--                  <td>{{ product.productID.categoryID.name }}</td>-->
+                  <td>{{ orderDetails.variationID.productID.categoryID.name }}</td>
                 </tr>
                 </tbody>
               </table>
@@ -183,7 +191,7 @@ export default {
     };
   },
   mounted() {
-    this.fetchProducts(this.currentPage, this.pageSize); // Gọi hàm để lấy tất cả sản phẩm khi component được mount
+    this.fetchOrder(this.currentPage, this.pageSize); // Gọi hàm để lấy tất cả sản phẩm khi component được mount
     // Gọi hàm để lấy tất cả khách hàng khi component được mount
   },
   methods: {
@@ -209,7 +217,7 @@ export default {
       // Định dạng giá thành chuỗi
       return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " ₫";
     },
-    async fetchProducts(page, size) {
+    async fetchOrder(page, size) {
       try {
         const response = await axios.get(`http://localhost:8080/admin/orders/findall?page=${page}&size=${size}`);
         this.orders = response.data.content; // Lấy danh sách order
@@ -222,7 +230,7 @@ export default {
     changePage(page) {
       if (page < 0 || page >= this.totalPages) return; // Kiểm tra giới hạn trang
       this.currentPage = page;
-      this.fetchProducts(this.currentPage, this.pageSize); // Tải dữ liệu trang mới
+      this.fetchOrder(this.currentPage, this.pageSize); // Tải dữ liệu trang mới
     },
     importFromFile() {
       // Logic to import orders from a file
@@ -258,7 +266,7 @@ export default {
         if (response.status === 200) {
           alert("Đơn hàng đã được hủy thành công!");
           // Cập nhật lại danh sách đơn hàng
-          this.fetchProducts(this.currentPage, this.pageSize);
+          this.fetchOrder(this.currentPage, this.pageSize);
         } else {
           alert("Không thể hủy đơn hàng. Vui lòng thử lại!");
         }
@@ -279,7 +287,7 @@ export default {
         if (response.status === 200) {
           alert("Đơn hàng đã được xác nhận thành công!");
           // Cập nhật lại danh sách đơn hàng
-          this.fetchProducts(this.currentPage, this.pageSize);
+          this.fetchOrder(this.currentPage, this.pageSize);
         } else {
           alert("Không thể xác nhận đơn hàng. Vui lòng thử lại!");
         }

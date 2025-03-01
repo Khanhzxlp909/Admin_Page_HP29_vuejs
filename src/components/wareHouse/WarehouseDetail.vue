@@ -65,6 +65,16 @@
             </div>
             <div class="alert">
               <div class="pagination">
+                <!-- Nút Trang đầu -->
+                <button
+                    class="page-button"
+                    :disabled="currentPage === 0"
+                    @click="changePage(0)"
+                >
+                  First
+                </button>
+
+                <!-- Nút Previous -->
                 <button
                     class="page-button"
                     :disabled="currentPage === 0"
@@ -72,7 +82,11 @@
                 >
                   Previous
                 </button>
+
+                <!-- Trang hiện tại và tổng số trang -->
                 <span>Page {{ currentPage + 1 }} of {{ totalPages }}</span>
+
+                <!-- Nút Next -->
                 <button
                     class="page-button"
                     :disabled="currentPage >= totalPages - 1"
@@ -80,7 +94,16 @@
                 >
                   Next
                 </button>
+                <!-- Nút Trang cuối -->
+                <button
+                    class="page-button"
+                    :disabled="currentPage >= totalPages - 1"
+                    @click="changePage(totalPages - 1)"
+                >
+                  Last
+                </button>
               </div>
+
             </div>
             <div class="tile mt-3">
               <h3 class="tile-title">Giỏ hàng</h3>
@@ -123,7 +146,7 @@
             <div class="row">
               <div class="form-group col-md-10">
                 <label class="control-label">Nhà cung cấp</label>
-                <select class="form-control" v-model="warehouse.suppiller">
+                <select class="form-control">
                   <option disabled value="">Chọn nhà cung cấp</option>
                   <option v-for="supplier in customers" :key="supplier.id" :value="supplier.id">
                     {{ supplier.name }}
@@ -133,42 +156,28 @@
               <div class="form-group col-md-12">
                 <label class="control-label">Nhân viên</label>
                 <textarea class="form-control" rows="4" placeholder="Ghi chú thêm đơn hàng"
-                          v-model="warehouse.employee" disabled ></textarea>
+                          disabled>{{ warehouse.employee ? warehouse.employee.name : 'Chưa có nhân viên' }}</textarea>
+
               </div>
             </div>
             <div class="row">
               <div class="form-group col-md-12">
                 <label class="control-label">Ghi chú đơn hàng</label>
                 <textarea class="form-control" rows="4" placeholder="Ghi chú thêm đơn hàng"
-                          v-model="warehouse.note"></textarea>
+                >{{warehouse.note}}</textarea>
               </div>
               <div class="form-group col-md-6">
                 <label class="control-label">Tạm tính tiền hàng: </label>
                 <p class="control-all-money-tamtinh">= {{ formatPrice(totalAmount) }} VNĐ</p>
               </div>
               <div class="form-group col-md-6">
-                <label class="control-label">Giảm giá (F7): </label>
-                <input class="form-control" type="text" v-model="discount" @input="calculateTotal">
-              </div>
-              <div class="form-group col-md-6">
                 <label class="control-label">Tổng cộng thanh toán: </label>
                 <p class="control-all-money-total">= {{ formatPrice(finalAmount) }} VNĐ</p>
-              </div>
-              <div class="form-group col-md-6">
-                <label class="control-label">Khách hàng đưa tiền (F8): </label>
-                <input class="form-control" style="width: 360px" type="number" v-model="amountReceived" @input="calculateChange">
               </div>
 
               <div class="form-group col-md-6">
                 <label class="control-label">Khách hàng còn nợ: </label>
                 <p class="control-all-money"> {{ formatPrice(changeDue) }} VNĐ</p>
-              </div>
-              <div class="form-group col-md-6">
-                <label class="control-label">Hình thức thanh toán</label>
-                <select class="form-control" v-model="status" required>
-                  <option value="1">Đã thanh toán</option>
-                  <option value="2">Chờ thanh toán</option>
-                </select>
               </div>
 
               <div class="tile-footer col-md-12">
@@ -191,15 +200,13 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-import {useRoute} from "vue-router";
-
 export default {
   data() {
     return {
       products: [],
       customers: [],
       cart: [],
-      warehouse: history.state.warehouse,
+      warehouse: [],
       selectedEmployee: '',
       currentPage: 0, // Số trang hiện tại
       pageSize: 4, // Số sản phẩm mỗi trang
@@ -233,10 +240,27 @@ export default {
     }
   },
   mounted() {
+    this.fetechWarehouse();
     this.fetchProducts(this.currentPage, this.pageSize); // Gọi hàm để lấy tất cả sản phẩm khi component được mount
-    this.getCustomer(); // Gọi hàm để lấy tất cả khách hàng khi component được mount
+    this.getsuppiller(); // Gọi hàm để lấy tất cả khách hàng khi component được mount
   },
   methods: {
+    async fetechWarehouse() {
+      const id = this.$route.query.id;
+      console.log(id);
+      try {
+        const resp = await axios.get(`http://localhost:8080/admin/warehouse/result/` + id);
+        if (resp.data) {
+          this.warehouse = resp.data;
+          console.log("Dữ liệu kho:", this.warehouse);
+        } else {
+          console.error("Dữ liệu kho không có hoặc trống");
+        }
+      } catch (error) {
+        console.error("Lỗi khi fetch warehouse:", error);
+      }
+    },
+
     selectid(id) {
       console.log("Biến thể: " + id);
     },
@@ -246,14 +270,14 @@ export default {
       try {
         const response = await axios.get(`http://localhost:8080/MiniatureCrafts/result/${searchKeyword}`);
         this.products = [...response.data.content];
-        console.log("Dữ liệu sản phẩm:", this.products);
       } catch (error) {
         console.error("Lỗi khi lấy sản phẩm:", error);
       }
     },
     async fetchProducts(page, size) {
       try {
-        const response = await axios.get(`http://localhost:8080/admin/variation/result/all?page=${page}&size=${size}`);
+        const supplierId = this.$route.query.supplierId;
+        const response = await axios.get(`http://localhost:8080/admin/variation/warehouse/supiller/${supplierId}?page=${page}&size=${size}`);
         this.products = response.data.content; // Lấy danh sách sản phẩm
         this.totalPages = response.data.page.totalPages; // Tổng số trang
         console.log("Dữ liệu sản phẩm:", this.products);
@@ -261,7 +285,7 @@ export default {
         console.error("Có lỗi xảy ra khi lấy dữ liệu sản phẩm:", error);
       }
     },
-    async getCustomer() {
+    async getsuppiller() {
       try {
         const response = await axios.get(`http://localhost:8080/admin/warehouse/suppiller/get`);
         console.log(response.data);
@@ -349,48 +373,48 @@ export default {
         alert("Giỏ hàng trống! Vui lòng thêm sản phẩm trước khi lưu.");
         return;
       }
-      // Tạo dữ liệu JSON để gửi đến API
-      for (const item of this.cart) {
 
-        const orderData = {
-          status: true,
-          note: "abc", // Bạn có thể thay đổi ghi chú này nếu cần
-          variation: {
-            id: item.id // ID của biến thể sản phẩm, có thể thay đổi theo logic của bạn
-          },
-          quantity: this.cart.reduce((total, item) => total + item.quantity, 0), // Tổng số lượng từ giỏ hàng
-          total_Amount: this.cart.reduce((total, item) => total + this.parsePrice(item.price) * item.quantity, 0).toFixed(2), // Tính tổng tiền
-          price: this.cart.reduce((total, item) => total + this.parsePrice(item.price) * item.quantity, 0).toFixed(2), // Tính tổng tiền
-          import: idWarehouse // ID nhập kho, có thể thay đổi theo logic của bạn
-        };
-        console.log(orderData)
-        // Lấy token từ cookies
-        try {
-          const token = Cookies.get("token"); // Lấy token từ cookies
-          const response = await axios.post(`http://localhost:8080/admin/warehouse/${idWarehouse}/add/whdt`, orderData, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json"
-            }
-          });
+      // Tạo danh sách sản phẩm từ giỏ hàng
+      const orderData = this.cart.map(item => ({
+        status: true,
+        note: "abc", // Có thể thay đổi theo logic của bạn
+        variation: {
+          id: item.id // ID của biến thể sản phẩm
+        },
+        quantity: item.quantity, // Lấy số lượng của từng sản phẩm thay vì tổng số lượng
+        total_Amount: (this.parsePrice(item.price) * item.quantity).toFixed(2), // Tổng tiền của từng sản phẩm
+        price: this.parsePrice(item.price).toFixed(2), // Giá của sản phẩm
+        import: idWarehouse // ID nhập kho
+      }));
 
-          if (response.status === 200) {
+      console.log(orderData);
 
-            // Reset giỏ hàng hoặc thực hiện các hành động khác nếu cần
-            this.fetchProducts(this.currentPage, this.pageSize);
-            this.cart = [];
-            this.orderNote = '';
-            this.codevoucher = '';
-          } else {
-            alert("Không thể lưu chi tiết kho. Vui lòng thử lại!");
+      // Lấy token từ cookies
+      try {
+        const token = Cookies.get("token");
+        const response = await axios.post(`http://localhost:8080/admin/warehouse/${idWarehouse}/add/whdt`, orderData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
           }
-        } catch (error) {
-          console.error("Lỗi khi lưu chi tiết kho:", error);
-          alert("Đã xảy ra lỗi khi lưu chi tiết kho!");
+        });
+
+        if (response.status === 200) {
+          // Reset giỏ hàng hoặc thực hiện các hành động khác nếu cần
+          this.fetchProducts(this.currentPage, this.pageSize);
+          this.cart = [];
+          this.orderNote = '';
+          this.codevoucher = '';
+          alert("Chi tiết kho đã được lưu thành công!");
+        } else {
+          alert("Không thể lưu chi tiết kho. Vui lòng thử lại!");
         }
+      } catch (error) {
+        console.error("Lỗi khi lưu chi tiết kho:", error);
+        alert("Đã xảy ra lỗi khi lưu chi tiết kho!");
       }
-      alert("Chi tiết kho đã được lưu thành công!");
     },
+
     saveAndPrint() {
       // Implement save and print functionality
     },

@@ -50,16 +50,16 @@
                 <tr>
                   <th>ID</th>
                   <th>Tên nhân viên</th>
-                  <th>Ngày sinh</th>
                   <th>Số điện thoại</th>
+                  <th>Trạng thái</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr v-for="employee in employees" :key="employee.id">
                   <td>{{ employee.id }}</td>
                   <td>{{ employee.name }}</td>
-                  <td>{{ employee.birthDate }}</td>
                   <td><span class="tag tag-success">{{ employee.phone }}</span></td>
+                  <td><span class="tag tag-success">{{ employee.status }}</span></td>
                 </tr>
                 </tbody>
               </table>
@@ -93,7 +93,7 @@ export default {
   methods: {
     async fetchEmployees() {
       try {
-        const response = await axios.get('http://localhost:8080/admin/employee/all'); // Đường dẫn API để lấy danh sách nhân viên
+        const response = await axios.get('http://localhost:8080/admin/employee/findall'); // Đường dẫn API để lấy danh sách nhân viên
         this.employees = response.data; // Lưu danh sách nhân viên
         this.totalEmployees = this.employees.length; // Cập nhật tổng số nhân viên
         this.activeEmployees = this.employees.filter(emp => emp.status).length; // Cập nhật số nhân viên đang hoạt động
