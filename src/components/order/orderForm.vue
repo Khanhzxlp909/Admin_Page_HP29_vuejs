@@ -127,12 +127,7 @@
                   </option>
                 </select>
               </div>
-              <div class="form-group col-md-12">
-                <label class="control-label">Voucher</label>
-                <input class="form-control" id="voucher" ref="voucher" v-model="codevoucher" @input="getVoucher()"
-                       type="text"
-                       placeholder="Nhập mã voucher">
-              </div>
+
               <div class="form-group col-md-12">
                 <label class="control-label">Ghi chú đơn hàng</label>
                 <textarea class="form-control" rows="4" placeholder="Ghi chú thêm đơn hàng"
@@ -153,20 +148,16 @@
                 <p class="control-all-money-tamtinh">= {{ formatPrice(totalAmount) }} VNĐ</p>
               </div>
               <div class="form-group col-md-6">
-                <label class="control-label">Giảm giá (F7): </label>
-                <input class="form-control" type="text" v-model="discount" @input="calculateTotal">
-              </div>
-              <div class="form-group col-md-6">
                 <label class="control-label">Tổng cộng thanh toán: </label>
                 <p class="control-all-money-total">= {{ formatPrice(finalAmount) }} VNĐ</p>
               </div>
               <div class="form-group col-md-6">
                 <label class="control-label">Khách hàng đưa tiền (F8): </label>
-                <input class="form-control" style="width: max-content" type="number"
-                       v-model="amountReceived" @input="calculateChange">
+                <input class="form-control" style="width: 100%" type="number" v-model="amountReceived" placeholder="Nhập số tiền khách đưa">
               </div>
+
               <div class="form-group col-md-6">
-                <label class="control-label">Khách hàng còn nợ: </label>
+                <label class="control-label">Trả lại khách hàng: </label>
                 <p class="control-all-money"> {{ formatPrice(changeDue) }} VNĐ</p>
               </div>
               <div class="tile-footer col-md-12">
@@ -208,15 +199,15 @@ export default {
   computed: {
     totalAmount() {
       return this.cart.reduce((total, item) => {
-        const price = this.parsePrice(item.price); // Chuyển đổi giá thành số
-        return total + (price * item.quantity); // Tính tổng giá
+        const price = this.parsePrice(item.price);
+        return total + (price * item.quantity);
       }, 0);
     },
     finalAmount() {
       return this.totalAmount - this.discount;
     },
     changeDue() {
-      return this.amountReceived - this.finalAmount;
+      return Math.max(this.amountReceived - this.finalAmount, 0); // Không để số âm
     },
     sortedCustomers() {
       if (!this.customers.length) return [];
@@ -272,28 +263,6 @@ export default {
         console.error("Lỗi khi lấy danh sách khách hàng:", error);
       }
     },
-    async getVoucher() {
-      const voucherCode = this.$refs.voucher.value; // Lấy mã voucher từ input
-      if (!voucherCode) {
-        this.discount = 0; // Nếu không có mã voucher, đặt discount về 0
-        return;
-      }
-
-      try {
-        const response = await axios.get(`http://localhost:8080/admin/orders/resultvoucher/${voucherCode}`);
-        if (response.data && response.data.discountValue) {
-          this.discount = response.data.discountValue; // Cập nhật giá trị giảm giá
-          // alert(`Giảm giá thành công: ${this.discount} VNĐ`);
-        } else {
-          this.discount = 0; // Nếu không có discountValue, đặt discount về 0
-          alert("Mã voucher không hợp lệ.");
-        }
-        this.calculateTotal(); // Gọi hàm tính toán tổng sau khi cập nhật discount
-      } catch (error) {
-        console.error("Lỗi khi kiểm tra voucher:", error);
-        alert("Có lỗi xảy ra khi kiểm tra mã voucher.");
-      }
-    },
     increaseQuantity(item) {
       item.quantity += 1;
     },
@@ -338,7 +307,7 @@ export default {
       if (imagesDTOS && imagesDTOS.length > 0) {
         const defaultImage = imagesDTOS.find((image) => image.set_Default); // Tìm ảnh có set_Default = true
         return defaultImage
-            ? `http://localhost:8080/images/${defaultImage.cd_Images}`
+            ? `http://localhost:8080/upload/images/${defaultImage.cd_Images}`
             : "/img/default.jpg";
       }
       return "/img/default.jpg"; // Trường hợp không có hình ảnh
@@ -366,7 +335,7 @@ export default {
         paymentMethod: {
           id: this.paymentMethod // Phương thức thanh toán
         },
-        status: this.status, // Trạng thái đơn hàng (có thể thay đổi theo logic của bạn)
+        status: "", // Trạng thái đơn hàng (có thể thay đổi theo logic của bạn)
         type_Oder: "", // Loại đơn hàng (có thể thay đổi theo logic của bạn)
         orderLine: this.cart.map(item => ({
           variationID: {

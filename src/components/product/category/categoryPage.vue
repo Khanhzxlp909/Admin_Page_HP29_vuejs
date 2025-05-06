@@ -18,7 +18,7 @@
             <a href="#"><b>Danh sách danh mục</b></a>
           </li>
         </ul>
-        <div id="clock">{{ currentTime }}</div>
+        <div></div>
       </div>
 
       <div class="row">
@@ -34,8 +34,8 @@
                       id="categoryName"
                       v-model="categoryForm.name"
                       class="form-control"
-                      required
                   />
+                  <span class="text-danger" v-if="errors.name">{{ errors.name }}</span>
                 </div>
 
                 <div class="form-group col-md-3">
@@ -111,6 +111,9 @@ export default {
         status: true,
       },
       isEditing: false,
+      errors: {
+        name: "",
+      },
     };
   },
 
@@ -121,7 +124,7 @@ export default {
   methods: {
     // Lấy danh sách danh mục
     async fetchCategories(page = 0, size = 5) {
-      const token = Cookies.get("token");
+      const token = Cookies.get("authToken");
       if (!token) {
         alert("Bạn cần đăng nhập.");
         this.$router.push("/login");
@@ -130,59 +133,76 @@ export default {
 
       try {
         const response = await axios.get(`http://localhost:8080/admin/category/get?page=${page}&size=${size}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {Authorization: `Bearer ${token}`},
         });
         this.categoryList = response.data.content;
-        this.totalPages = response.data.totalPages;
+        this.totalPages = response.data.page.totalPages;
       } catch (error) {
         console.error("Lỗi khi tải danh mục:", error);
         alert("Không thể tải danh mục.");
       }
     },
 
+    validateForm() {
+      this.errors.name = "";
+
+      if (!this.categoryForm.name.trim()) {
+        this.errors.name = "Tên danh mục không được để trống hoặc chỉ chứa khoảng trắng.";
+        return false;
+      }
+      return true;
+    },
+
     // Thêm danh mục
     async addCategory() {
-      const token = Cookies.get("token");
-      if (!token) {
-        alert("Bạn cần đăng nhập.");
-        return;
-      }
-
+      if (!this.validateForm()) return; // Kiểm tra dữ liệu trước khi gửi
+      const token = Cookies.get("authToken");
       try {
-        await axios.post("http://localhost:8080/admin/category/save", this.categoryForm, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.post("http://localhost:8080/admin/category/save",
+            this.categoryForm, // Dữ liệu gửi lên
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+        );
         alert("Thêm danh mục thành công!");
-        this.fetchCategories(this.currentPage, this.pageSize);
+        this.fetchCategories();
         this.resetForm();
+
       } catch (error) {
         console.error("Lỗi khi thêm danh mục:", error);
       }
     },
 
-    // Sửa danh mục
-    editCategory(category) {
-      this.categoryForm = { ...category };
-      this.isEditing = true;
-    },
-
+// Cập nhật danh mục
     async updateCategory() {
-      const token = Cookies.get("token");
-      if (!token) {
-        alert("Bạn cần đăng nhập.");
-        return;
-      }
-
+      if (!this.validateForm()) return; // Kiểm tra dữ liệu trước khi gửi
+      const token = Cookies.get("authToken");
       try {
-        await axios.post(`http://localhost:8080/admin/category/update`, this.categoryForm, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.post("http://localhost:8080/admin/category/update",
+            this.categoryForm, // Dữ liệu gửi lên
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+        );
         alert("Cập nhật danh mục thành công!");
-        this.fetchCategories(this.currentPage, this.pageSize);
+        this.fetchCategories();
         this.resetForm();
       } catch (error) {
         console.error("Lỗi khi cập nhật danh mục:", error);
       }
+    },
+
+
+    // Sửa danh mục
+    editCategory(category) {
+      this.categoryForm = {...category};
+      this.isEditing = true;
     },
 
     // Xóa danh mục
@@ -193,10 +213,10 @@ export default {
     },
 
     async deleteCategory(id) {
-      const token = Cookies.get("token");
+      const token = Cookies.get("authToken");
       try {
         await axios.get(`http://localhost:8080/admin/category/delete/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {Authorization: `Bearer ${token}`},
         });
         alert("Xóa danh mục thành công!");
         this.fetchCategories(this.currentPage, this.pageSize);
@@ -213,7 +233,7 @@ export default {
 
     // Reset form
     resetForm() {
-      this.categoryForm = { id: "", name: "", status: true };
+      this.categoryForm = {id: "", name: "", status: true};
       this.isEditing = false;
     },
   },

@@ -18,37 +18,6 @@
                   <i class="fas fa-plus"></i> Tạo mới đơn hàng
                 </router-link>
               </div>
-              <div class="col-sm-2">
-                <button class="btn btn-delete btn-sm nhap-tu-file" type="button" title="Nhập" @click="importFromFile">
-                  <i class="fas fa-file-upload"></i> Tải từ file
-                </button>
-              </div>
-              <div class="col-sm-2">
-                <button class="btn btn-delete btn-sm print-file" type="button" title="In" @click="printTable">
-                  <i class="fas fa-print"></i> In dữ liệu
-                </button>
-              </div>
-              <div class="col-sm-2">
-                <button class="btn btn-delete btn-sm print-file js-textareacopybtn" type="button" title="Sao chép"
-                        @click="copyData">
-                  <i class="fas fa-copy"></i> Sao chép
-                </button>
-              </div>
-              <div class="col-sm-2">
-                <a class="btn btn-excel btn-sm" href="#" title="Xuất Excel">
-                  <i class="fas fa-file-excel"></i> Xuất Excel
-                </a>
-              </div>
-              <div class="col-sm-2">
-                <button class="btn btn-delete btn-sm pdf-file" type="button" title="Xuất PDF" @click="exportToPDF">
-                  <i class="fas fa-file-pdf"></i> Xuất PDF
-                </button>
-              </div>
-              <div class="col-sm-2">
-                <button class="btn btn-delete btn-sm" type="button" title="Xóa" @click="deleteAll">
-                  <i class="fas fa-trash-alt"></i> Xóa tất cả
-                </button>
-              </div>
             </div>
             <table class="table table-hover table-bordered" id="sampleTable">
               <thead>
@@ -57,8 +26,10 @@
                 <th>Khách hàng</th>
                 <th>Địa chỉ</th>
                 <th>Số điện thoại</th>
-                <th>Phương thức thanh toán</th>
+                <th>PT thanh toán</th>
                 <th>Ghi chú</th>
+                <th>Thời gian đặt hàng</th>
+                <th>Thời gian thanh toán</th>
                 <th>Tổng tiền</th>
                 <th>Tình trạng</th>
                 <th>Tính năng</th>
@@ -72,13 +43,16 @@
                 <td>{{ item.customerID.phone }}</td>
                 <td>{{ item.paymentMethod.note }}</td>
                 <td>{{ item.note }}</td>
+                <td>{{ formatDateTime(item.order_Time) }}</td>
+                <td>{{ formatDateTime(item.payment_Time) }}</td>
                 <td>{{ formatPrice(item.total_Payment) }}</td>
                 <td>
                   <span :class="{
                       'badge bg-danger': item.status === 0,
                       'badge bg-warning': item.status === 1,
                       'badge bg-success': item.status === 2,
-                      'badge bg-info': item.status === 3
+                      'badge bg-info': item.status === 3,
+                      'badge bg-primary': item.status === 4
                     }">
                     {{ item.statusText }}
                   </span>
@@ -89,19 +63,34 @@
                       class="btn btn-primary btn-sm trash"
                       type="button"
                       @click="confirmDelete(item.id)"
-                      v-if="item.status !== 2  && item.status !== 3"
+                      v-if="item.status !== 0 && item.status !== 2  && item.status !== 3 && item.status !== 4"
                   >
                     <i class="fas fa-trash-alt"></i> Huỷ đơn hàng
                   </button>
-                  <h1></h1>
+
                   <button
                       class="btn btn-success btn-sm edit"
                       type="button"
                       @click="succressOrder(item.id)"
-                      v-if="item.status !== 2  && item.status !== 3"
+                      v-if="item.status !== 0 && item.status !== 2  && item.status !== 3 && item.status !== 4"
                   >
                     <i class="fa fa-edit"></i> Xác nhận đơn hàng
                   </button>
+
+                  <button
+                      class="btn btn-warning btn-sm edit"
+                      type="button"
+                      v-if="
+                          item.status === 3 &&
+                          !isOver30Days(item.requestDate) &&
+                          item.status !== 4 &&
+                          !item.note?.includes('Tr? hàng đơn #')
+                        "
+                      @click="initiateReturnOrder(item)"
+                  >
+                    <i class="fa fa-edit"></i> Trả hàng
+                  </button>
+
                 </td>
               </tr>
               </tbody>
@@ -142,6 +131,7 @@
               <table class="table table-hover table-bordered">
                 <thead>
                 <tr>
+                  <th class="so--luong">Ảnh sản phẩm</th>
                   <th class="so--luong">Mã hàng</th>
                   <th class="so--luong">Tên sản phẩm</th>
                   <th class="so--luong">Số lượng</th>
@@ -155,12 +145,28 @@
                   <td colspan="7">Không tìm thấy sản phẩm nào.</td>
                 </tr>
                 <tr v-for="orderDetails in orderDetails" :key="orderDetails">
-                  <td>{{ orderDetails.variationID.sku }}</td>
-                  <td>{{ orderDetails.variationName }}</td>
-                  <td>{{ orderDetails.quantity }}</td>
-                  <td>{{ formatPrice(orderDetails.unit_Price) }}</td>
-                  <td>{{ formatPrice(orderDetails.price) }}</td>
-                  <td>{{ orderDetails.variationID.productID.categoryID.name }}</td>
+                  <td>
+                    <center>
+                      <img :src="getDefaultImageUrl(orderDetails.variationID.productID.imagesDTOS)" alt=""
+                           width="70px;"/>
+                    </center>
+                  </td>
+                  <td>{{ orderDetails.id }}</td>
+                  <td>
+                    <center>{{ orderDetails.variationName }}</center>
+                  </td>
+                  <td>
+                    <center>{{ orderDetails.quantity }}</center>
+                  </td>
+                  <td>
+                    <center>{{ formatPrice(orderDetails.unit_Price) }}</center>
+                  </td>
+                  <td>
+                    <center>{{ formatPrice(orderDetails.price) }}</center>
+                  </td>
+                  <td>
+                    <center>{{ orderDetails.variationID.productID.categoryID.name }}</center>
+                  </td>
                 </tr>
                 </tbody>
               </table>
@@ -178,6 +184,7 @@
 <script>
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import dayjs from 'dayjs'
 
 export default {
   data() {
@@ -195,6 +202,24 @@ export default {
     // Gọi hàm để lấy tất cả khách hàng khi component được mount
   },
   methods: {
+    isOver30Days(dateString) {
+      if (!dateString) return false;
+
+      const createdDate = dayjs(dateString, "YYYY-MM-DD HH:mm:ss"); // Parse đúng format
+      const today = dayjs();
+      const diffDays = today.diff(createdDate, 'day');
+      console.log("created:", createdDate.format(), "now:", today.format(), "diff:", diffDays);
+
+      return diffDays > 30;
+    },
+
+    formatDateTime(dateTime) {
+      if (!dateTime) {
+        return 'Chưa thanh toán';
+      }
+      return dayjs(dateTime).format('YYYY-MM-DD HH:mm:ss');
+    },
+
     async viewOrderDetails(orderId) {
       const token = Cookies.get("authToken");
       console.log("token", token);
@@ -209,14 +234,25 @@ export default {
         console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
       }
     },
+
+    getDefaultImageUrl(imagesDTOS) {
+      if (imagesDTOS && imagesDTOS.length > 0) {
+        const defaultImage = imagesDTOS.find((image) => image.set_Default);
+        return defaultImage ? `http://localhost:8080/upload/images/${defaultImage.cd_Images}` : "/img/default.jpg";
+      }
+      return "/img/default.jpg";
+    },
+
     parsePrice(priceString) {
       // Chuyển đổi giá từ chuỗi sang số
       return parseFloat(priceString.replace(/\./g, '').replace(' ₫', ''));
     },
+
     formatPrice(price) {
       // Định dạng giá thành chuỗi
       return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " ₫";
     },
+
     async fetchOrder(page, size) {
       try {
         const response = await axios.get(`http://localhost:8080/admin/orders/findall?page=${page}&size=${size}`);
@@ -227,14 +263,17 @@ export default {
         console.error("Có lỗi xảy ra khi lấy dữ liệu:", error);
       }
     },
+
     changePage(page) {
       if (page < 0 || page >= this.totalPages) return; // Kiểm tra giới hạn trang
       this.currentPage = page;
       this.fetchOrder(this.currentPage, this.pageSize); // Tải dữ liệu trang mới
     },
+
     importFromFile() {
       // Logic to import orders from a file
     },
+
     printTable() {
       const tab = document.getElementById('sampleTable');
       const win = window.open('', '', 'height=700,width=700');
@@ -242,39 +281,35 @@ export default {
       win.document.close();
       win.print();
     },
-    copyData() {
-      // Logic to copy data
-    },
-    exportToPDF() {
-      // Logic to export to PDF
-    },
-    deleteAll() {
-      // Logic to delete all selected orders
-    },
+
     async confirmDelete(orderId) {
-      console.log(orderId);
-      const token = Cookies.get("token"); // Lấy token từ cookies
-      const apiCancel = `http://localhost:8080/admin/orders/cancelOrder/${orderId}`; // Đường dẫn API để hủy đơn hàng
+      if (confirm(`Bạn có chắc chắn muốn hủy đơn hàng có mã ${orderId}?`)) {
+        console.log(orderId);
+        const token = Cookies.get("token"); // Lấy token từ cookies
+        const apiCancel = `http://localhost:8080/admin/orders/cancelOrder/${orderId}`; // Đường dẫn API để hủy đơn hàng
 
-      try {
-        const response = await axios.get(apiCancel, {
-          headers: {
-            Authorization: `Bearer ${token}` // Thêm token vào header
+        try {
+          const response = await axios.get(apiCancel, {
+            headers: {
+              Authorization: `Bearer ${token}` // Thêm token vào header
+            }
+          });
+
+          if (response.status === 200) {
+            alert("Đơn hàng đã được hủy thành công!");
+            // Cập nhật lại danh sách đơn hàng
+            this.fetchOrder(this.currentPage, this.pageSize);
+          } else {
+            alert("Không thể hủy đơn hàng. Vui lòng thử lại!");
           }
-        });
-
-        if (response.status === 200) {
-          alert("Đơn hàng đã được hủy thành công!");
-          // Cập nhật lại danh sách đơn hàng
-          this.fetchOrder(this.currentPage, this.pageSize);
-        } else {
-          alert("Không thể hủy đơn hàng. Vui lòng thử lại!");
+        } catch (error) {
+          console.error("Lỗi khi hủy đơn hàng:", error);
+          alert("Có lỗi xảy ra khi hủy đơn hàng.");
         }
-      } catch (error) {
-        console.error("Lỗi khi hủy đơn hàng:", error);
-        alert("Có lỗi xảy ra khi hủy đơn hàng.");
+
       }
     },
+
     async succressOrder(orderId) {
       // Logic to edit a specific order
       console.log(orderId);
@@ -296,10 +331,50 @@ export default {
         alert("Có lỗi xảy ra khi hủy đơn hàng.");
       }
     },
+
     toggleAllCheckboxes(event) {
       const isChecked = event.target.checked;
       this.selectedOrders = isChecked ? this.orders.map(order => order.id) : [];
+    },
+
+    async initiateReturnOrder(order) {
+      try {
+        // 1. Lấy danh sách sản phẩm trong đơn hàng gốc
+        const res = await axios.get(`http://localhost:8080/admin/orders/history/getprd/${order.id}`);
+        const originalLines = res.data;
+
+        // 2. Tạo dữ liệu đơn trả hàng mới
+        const returnOrder = {
+          address: order.address,
+          note: 'Trả hàng đơn #' + order.id,
+          customerID: {
+            id: order.customerID.id
+          },
+          paymentMethod: {
+            id: order.paymentMethod.id
+          },
+          orderLine: originalLines.map(line => ({
+            variationID: {id: line.variationID.id},
+            quantity: line.quantity
+          }))
+        };
+
+        // 3. Gửi yêu cầu tạo đơn trả hàng
+        const createRes = await axios.post('http://localhost:8080/admin/orders/return/'+order.id, returnOrder);
+
+        if (createRes.status === 200) {
+          alert('Tạo đơn trả hàng thành công!');
+          this.fetchOrder(this.currentPage, this.pageSize); // Refresh danh sách đơn hàng
+        } else {
+          alert('Không thể tạo đơn trả hàng!');
+        }
+      } catch (error) {
+        console.error('Lỗi khi tạo đơn trả hàng:', error);
+        alert('Đã xảy ra lỗi khi tạo đơn trả hàng!');
+      }
     }
+
+
   },
   filters: {
     currency(value) {

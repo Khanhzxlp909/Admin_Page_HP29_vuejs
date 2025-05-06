@@ -49,7 +49,7 @@
                         class="form-control"
                         type="text"
                         id="customerName"
-                        required
+                         
                     />
                   </div>
                   <div class="form-group col-md-4">
@@ -59,7 +59,7 @@
                         class="form-control"
                         type="text"
                         id="customerAddress"
-                        required
+                         
                     />
                   </div>
                   <div class="form-group col-md-4">
@@ -69,7 +69,7 @@
                         class="form-control"
                         type="text"
                         id="customerPhone"
-                        required
+                         
                     />
                   </div>
                   <div class="form-group col-md-4">
@@ -79,7 +79,7 @@
                         class="form-control"
                         type="text"
                         id="customerNote"
-                        required
+                         
                     />
                   </div>
                   <div class="form-group col-md-4">
@@ -88,7 +88,7 @@
                         v-model="customer.status"
                         class="form-control"
                         id="customerStatus"
-                        required
+                         
                     >
                       <option value="true">Hoạt động</option>
                       <option value="false">Không hoạt động</option>
@@ -107,7 +107,6 @@
                 </div>
                 <div class="form-group">
                   <button class="btn btn-primary" type="submit">Lưu lại</button>
-                  <a class="btn btn-secondary" href="/doc/table-data-table.html">Hủy bỏ</a>
                 </div>
               </form>
             </div>
@@ -153,8 +152,8 @@
                   <th width="300">Địa chỉ</th>
                   <th>Ngày tạo</th>
                   <th>SĐT</th>
-                  <th>Ghi chú</th>
                   <th>Trạng thái</th>
+                  <th>Ghi chú</th>
                   <th width="100">Tính năng</th>
                 </tr>
                 </thead>
@@ -292,8 +291,13 @@ export default {
 
     const deleteCustomer = async (id) => {
       try {
+        const token = Cookies.get("token"); // Lấy token từ cookies
         const url = `http://localhost:8080/admin/customer/delete/${id}`;
-        await axios.get(url);
+        await axios.get(url,{
+          headers: {
+            Authorization: `Bearer ${token}` // Thêm token vào header
+          }
+        });
         fetchCustomers(); // Refresh danh sách sau khi xóa
         alert("Khách hàng đã được xóa thành công.");
       } catch (error) {
@@ -303,6 +307,28 @@ export default {
     };
 
     const submitForm = async () => {
+      // Custom validation
+      if (!customer.value.name.trim()) {
+        alert("Họ và tên không được để trống.");
+        return;
+      }
+
+      if (!customer.value.address.trim()) {
+        alert("Địa chỉ không được để trống.");
+        return;
+      }
+
+      const phonePattern = /^[0-9]{10,15}$/; // Example pattern for phone numbers
+      if (!phonePattern.test(customer.value.phone)) {
+        alert("Số điện thoại không hợp lệ. Vui lòng nhập từ 10 đến 15 chữ số.");
+        return;
+      }
+
+      if (!customer.value.note.trim()) {
+        alert("Ghi chú không được để trống.");
+        return;
+      }
+
       try {
         console.log("Bắt đầu gửi form...");
         console.log("Dữ liệu khách hàng:", customer.value);

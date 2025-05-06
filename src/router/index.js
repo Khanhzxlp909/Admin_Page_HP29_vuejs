@@ -1,4 +1,4 @@
-import {createRouter, createWebHistory} from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 import Dashboard from "@/components/view/orderPage.vue";
 import POSOrder from "@/components/order/orderForm.vue";
 import ListOrder from "@/components/order/listOrder.vue";
@@ -8,55 +8,58 @@ import uploadImages from "@/components/product/uploadImagesProduct.vue";
 import productEdit from "@/components/product/productEdit.vue";
 import productAdd from "@/components/product/productAdd.vue";
 import customerList from "@/components/customer/customerList.vue";
-
-import wareHouse from "@/components/wareHouse/warehouse.vue";
-import wareHouseDetail from "@/components/wareHouse/WarehouseDetail.vue";
-
-import customerAdd from "@/components/customer/customerAdd.vue";
-import customerEdit from "@/components/customer/customerEdit.vue";
-
 import categoryPage from "@/components/product/category/categoryPage.vue";
 import brandsPage from "@/components/product/brands/brandsPage.vue";
+import wareHouse from "@/components/wareHouse/warehouse.vue";
+import wareHouseDetail from "@/components/wareHouse/WarehouseDetail.vue";
+import SuppilerPage from "@/components/wareHouse/SuppillerPage.vue";
+import customerAdd from "@/components/customer/customerAdd.vue";
+import customerEdit from "@/components/customer/customerEdit.vue";
 import employeePages from "@/components/employee/employeePages.vue";
 import setAccount from "@/components/employee/setAccount.vue";
+import NewPage from "@/components/news/NewsPage.vue";
+import IntroPage from "@/components/news/intro/IntroPage.vue";
+import ContactPage from "@/components/contact/ContactPage.vue";
 
+import Cookies from "js-cookie";
 
 const routes = [
-    {path: "/", component: Dashboard},
-    {path: "/order", component: POSOrder},
-    {path: "/posorder", component: ListOrder},
-    {path: "/login", component: LoginPage},
-    {path: "/product", component: productPage}, // Trang danh sách sản phẩm
-    {path: "/addproduct", component: uploadImages}, // Trang danh sách sản phẩm
-    {path: "/product/add", component: productAdd}, // Trang thêm sản phẩm
-    {path: "/product/edit/:id", component: productEdit, props: true}, // Trang sửa sản phẩm
-    {path: "/customer", component: customerList}, // Trang danh sách khách hàng
-    {path: "/employee", component: employeePages}, // Trang danh sách khách hàng
-
-    {path: "/warehouse", component: wareHouse}, // Trang danh sách khách hàng
-    {path: "/warehouse/warehouseDetails", component: wareHouseDetail}, // Trang danh sách khách hàng
-
-    {path: "/customer/add", component: customerAdd}, // Trang them khách hàng
-    {path: "/customer/edit", component: customerEdit}, // Trang sua thong tin khách hàng
-
-    {path: "/category", component: categoryPage}, // Trang sua thong tin khách hàng
-
-    {path: "/brands", component: brandsPage}, // Trang sua thong tin khách hàng
-
-    {
-        path: '/employee/account/:id', // Định nghĩa route với tham số :id
-        name: 'EmployeeAccount',
-        component: setAccount,
-    },
-
-
-
-
+    { path: "/", component: Dashboard, meta: { requiresAuth: true } },
+    { path: "/order", component: POSOrder, meta: { requiresAuth: true } },
+    { path: "/posorder", component: ListOrder, meta: { requiresAuth: true } },
+    { path: "/login", component: LoginPage },
+    { path: "/product", component: productPage, meta: { requiresAuth: true } },
+    { path: "/addproduct", component: uploadImages, meta: { requiresAuth: true } },
+    { path: "/product/add", component: productAdd, meta: { requiresAuth: true } },
+    { path: "/product/edit/:id", component: productEdit, props: true, meta: { requiresAuth: true } },
+    { path: "/customer", component: customerList, meta: { requiresAuth: true } },
+    { path: "/employee", component: employeePages, meta: { requiresAuth: true } },
+    { path: "/warehouse", component: wareHouse, meta: { requiresAuth: true } },
+    { path: "/supplier", component: SuppilerPage, meta: { requiresAuth: true } },
+    { path: "/warehouse/warehouseDetails", component: wareHouseDetail, meta: { requiresAuth: true } },
+    { path: "/customer/add", component: customerAdd, meta: { requiresAuth: true } },
+    { path: "/customer/edit", component: customerEdit, meta: { requiresAuth: true } },
+    { path: "/category", component: categoryPage, meta: { requiresAuth: true } },
+    { path: "/brands", component: brandsPage, meta: { requiresAuth: true } },
+    { path: "/contact", component: ContactPage , meta: { requiresAuth: true }},
+    { path: "/employee/account/:id", name: "EmployeeAccount", component: setAccount, meta: { requiresAuth: true } },
+    { path: "/news", name: "NewsPage", component: NewPage , meta: { requiresAuth: true }},
+    { path: "/intro", name: "IntroPage", component: IntroPage , meta: { requiresAuth: true }},
 ];
 
 const router = createRouter({
     history: createWebHistory(),
     routes,
+});
+
+// Navigation Guard để kiểm tra trạng thái đăng nhập
+router.beforeEach((to, from, next) => {
+    const isAuthenticated = Cookies.get("authToken");
+    if (to.meta.requiresAuth && !isAuthenticated) {
+        next("/login"); // Chuyển hướng đến trang đăng nhập nếu chưa đăng nhập
+    } else {
+        next(); // Cho phép truy cập nếu đã đăng nhập hoặc không cần xác thực
+    }
 });
 
 export default router;

@@ -146,7 +146,7 @@
             <div class="row">
               <div class="form-group col-md-10">
                 <label class="control-label">Nhà cung cấp</label>
-                <select class="form-control">
+                <select class="form-control" v-model="selectedSupplier">
                   <option disabled value="">Chọn nhà cung cấp</option>
                   <option v-for="supplier in customers" :key="supplier.id" :value="supplier.id">
                     {{ supplier.name }}
@@ -176,9 +176,22 @@
               </div>
 
               <div class="form-group col-md-6">
-                <label class="control-label">Khách hàng còn nợ: </label>
+                <label class="control-label">Khách hàng đưa tiền: </label>
+                <input
+                    type="number"
+                    class="form-control"
+                    v-model="amountReceived"
+                    placeholder="Nhập số tiền khách đưa"
+                    style="width: 100%"
+                />
+              </div>
+
+              <div class="form-group col-md-6">
+                <label class="control-label">Trả lại khách hàng: </label>
                 <p class="control-all-money"> {{ formatPrice(changeDue) }} VNĐ</p>
               </div>
+
+
 
               <div class="tile-footer col-md-12">
                 <button class="btn btn-primary luu-san-pham" type="button" @click="saveWareHouseDetail">Lưu đơn hàng
@@ -208,6 +221,7 @@ export default {
       cart: [],
       warehouse: [],
       selectedEmployee: '',
+      selectedSupplier: '',
       currentPage: 0, // Số trang hiện tại
       pageSize: 4, // Số sản phẩm mỗi trang
       orderNote: '',
@@ -222,21 +236,22 @@ export default {
         email: '',
         birthDate: '',
         phone: ''
-      }
+      },
+      amountReceived: 0, // Số tiền khách đưa
     };
   },
   computed: {
     totalAmount() {
       return this.cart.reduce((total, item) => {
-        const price = this.parsePrice(item.price); // Chuyển đổi giá thành số
-        return total + (price * item.quantity); // Tính tổng giá
+        const price = this.parsePrice(item.price);
+        return total + (price * item.quantity);
       }, 0);
     },
     finalAmount() {
       return this.totalAmount - this.discount;
     },
     changeDue() {
-      return this.amountReceived - this.finalAmount;
+      return Math.max(this.amountReceived - this.finalAmount, 0); // Không cho ra số âm
     }
   },
   mounted() {
@@ -245,6 +260,11 @@ export default {
     this.getsuppiller(); // Gọi hàm để lấy tất cả khách hàng khi component được mount
   },
   methods: {
+    calculateChange() {
+      if (this.amountReceived < 0) {
+        this.amountReceived = 0; // Không cho nhập số âm
+      }
+    },
     async fetechWarehouse() {
       const id = this.$route.query.id;
       console.log(id);
@@ -252,7 +272,10 @@ export default {
         const resp = await axios.get(`http://localhost:8080/admin/warehouse/result/` + id);
         if (resp.data) {
           this.warehouse = resp.data;
-          console.log("Dữ liệu kho:", this.warehouse);
+          console.log("log 255 Dữ liệu kho:", this.warehouse);
+          if (this.warehouse.supplier && this.warehouse.supplier.id) {
+            this.selectedSupplier = this.warehouse.supplier.id;
+          }
         } else {
           console.error("Dữ liệu kho không có hoặc trống");
         }
@@ -264,6 +287,7 @@ export default {
     selectid(id) {
       console.log("Biến thể: " + id);
     },
+
     async myFunction() {
       const searchKeyword = this.$refs.myInput.value; // Lấy giá trị từ ô tìm kiếm
       console.log(searchKeyword);
@@ -274,6 +298,7 @@ export default {
         console.error("Lỗi khi lấy sản phẩm:", error);
       }
     },
+
     async fetchProducts(page, size) {
       try {
         const supplierId = this.$route.query.supplierId;
@@ -285,25 +310,21 @@ export default {
         console.error("Có lỗi xảy ra khi lấy dữ liệu sản phẩm:", error);
       }
     },
+
     async getsuppiller() {
       try {
-        const response = await axios.get(`http://localhost:8080/admin/warehouse/suppiller/get`);
-        console.log(response.data);
+        const response = await axios.get("http://localhost:8080/admin/warehouse/suppiller/get");
         this.customers = response.data;
-      } catch (error) {
-        // Xử lý lỗi chi tiết
-        if (error.response) {
-          // Nếu lỗi từ server
-          console.error("Lỗi từ server:", error.response.status, error.response.data);
-        } else if (error.request) {
-          // Nếu không nhận được phản hồi từ server
-          console.error("Không nhận được phản hồi từ server:", error.request);
-        } else {
-          // Lỗi khác
-          console.error("Có lỗi xảy ra:", error.message);
+
+        // Nếu đã có `selectedSupplier` từ đơn hàng thì không đổi nữa
+        if (!this.selectedSupplier && this.customers.length > 0) {
+          this.selectedSupplier = this.customers[0].id;
         }
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách nhà cung cấp:", error);
       }
     },
+
     async getVoucher() {
       const voucherCode = this.$refs.voucher.value; // Lấy mã voucher từ input
       if (!voucherCode) {
@@ -326,17 +347,22 @@ export default {
         alert("Có lỗi xảy ra khi kiểm tra mã voucher.");
       }
     },
+
     increaseQuantity(item) {
       item.quantity += 1;
     },
+
     decreaseQuantity(item) {
       if (item.quantity > 1) {
         item.quantity -= 1;
       }
+
     },
+
     removeFromCart(item) {
       this.cart = this.cart.filter(product => product.id !== item.id);
     },
+
     addToCart(product) {
       const existingProduct = this.cart.find(item => item.id === product.id);
       if (existingProduct) {
@@ -345,19 +371,23 @@ export default {
         this.cart.push({...product, quantity: 1});  // Thêm mới nếu chưa có
       }
     },
+
     parsePrice(priceString) {
       // Chuyển đổi giá từ chuỗi sang số
       return parseFloat(priceString.replace(/\./g, '').replace(' ₫', ''));
     },
+
     formatPrice(price) {
       // Định dạng giá thành chuỗi
       return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " ₫";
     },
+
     changePage(page) {
       if (page < 0 || page >= this.totalPages) return; // Kiểm tra giới hạn trang
       this.currentPage = page;
       this.fetchProducts(this.currentPage, this.pageSize); // Tải dữ liệu trang mới
     },
+
     getDefaultImageUrl(imagesDTOS) {
       if (imagesDTOS && imagesDTOS.length > 0) {
         const defaultImage = imagesDTOS.find((image) => image.set_Default); // Tìm ảnh có set_Default = true
@@ -367,6 +397,7 @@ export default {
       }
       return "/img/default.jpg"; // Trường hợp không có hình ảnh
     },
+
     async saveWareHouseDetail() {
       const idWarehouse = this.$route.query.id; // Lấy ID kho từ query params
       if (this.cart.length === 0) {

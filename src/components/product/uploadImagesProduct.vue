@@ -12,7 +12,7 @@
         <div class="col-md-12">
           <div class="tile">
             <div class="tile-body">
-              <form @submit.prevent="addProduct" class="product-form">
+              <form @submit.prevent="isEditing ? updateProduct() : addProduct()" class="product-form">
                 <div class="form-group">
                   <label for="productName">Tên sản phẩm:</label>
                   <input id="productName" v-model="product.name" class="form-control" />
@@ -32,13 +32,32 @@
                   <input type="file" @change="handleFileUpload($event, index)" class="btn btn-info"/>
                   <input type="radio" v-model="defaultImageIndex" :value="index"/> Ảnh mặc định
                   <br/>
-                  <img v-if="image.preview" :src="image.preview" alt="Preview"
-                       style="max-width: 100px; margin-top: 5px;"/>
+                  <img v-if="image.preview" :src="image.preview" alt="Preview" style="max-width: 100px; margin-top: 5px;" />
                 </div>
 
                 <br/>
-                <button type="submit" class="btn btn-primary">Thêm sản phẩm</button>
+                <button type="submit" class="btn btn-primary">{{ isEditing ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm' }}</button>
               </form>
+              <table class="table table-hover table-bordered mt-3">
+                <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Tên danh mục</th>
+                  <th>Tình trạng</th>
+                  <th>Chức năng</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="item in products" :key="item.id">
+                  <td>{{ item.id }}</td>
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.categoryID.name}}</td>
+                  <td>
+                    <button @click="editProduct(item)" class="btn btn-warning">Edit</button>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -55,22 +74,95 @@ export default {
   data() {
     return {
       product: {
+        id: "",
         name: "",
         categoryID: {id: ""}
       },
+      products: [],
       categories: [],
+      id_images : [],
       images: [
-        {file: null, preview: ""},
-        {file: null, preview: ""},
-        {file: null, preview: ""}
+        {id:"",file: null, preview: ""},
+        {id:"",file: null, preview: ""},
+        {id:"",file: null, preview: ""}
       ],
-      defaultImageIndex: 0
+      defaultImageIndex: 0,
+      imageUrls: [],
+      isEditing: false
     };
   },
   created() {
     this.fetchCategories();
+    this.fetchProducts();
   },
   methods: {
+    editProduct(product) {
+      this.product = {
+        id: product.id,
+        name: product.name,
+        categoryID: { id: product.categoryID.id }
+      };
+
+      console.log("Dữ liệu sản phẩm:", product);
+      this.isEditing = true; // Bật chế độ chỉnh sửa
+      // Xóa danh sách cũ trước khi gán mới
+      this.imageUrls = []; // Mảng chứa tất cả đường dẫn cd_Images từ API
+
+      if (product.imagesDTOS && product.imagesDTOS.length > 0) {
+        this.id_images = []; // Xóa danh sách ID ảnh cũ
+
+        this.images = product.imagesDTOS.map(img => {
+          this.id_images.push(img.id); // Lưu ID ảnh cần xóa
+          this.imageUrls.push(img.cd_Images); // Lưu cd_Images vào mảng
+
+          return {
+            id: img.id,
+            file: null,
+            preview: img.cd_Images.includes("http")
+                ? img.cd_Images
+                : `http://localhost:8080/upload/images/${img.cd_Images}`
+          };
+        });
+
+        console.log("Danh sách URL ảnh:", this.imageUrls); // Kiểm tra dữ liệu
+
+        // Lấy vị trí ảnh mặc định
+        const defaultImageIndex = product.imagesDTOS.findIndex(img => img.set_Default);
+        this.defaultImageIndex = defaultImageIndex !== -1 ? defaultImageIndex : 0;
+      } else {
+        this.images = [
+          { file: null, preview: "" },
+          { file: null, preview: "" },
+          { file: null, preview: "" }
+        ];
+        this.id_images = []; // Không có ảnh để xóa
+        this.imageUrls = []; // Không có ảnh để lưu
+      }
+    },
+
+
+    async fetchProducts() {
+      const token = Cookies.get("authToken");
+      if (!token) {
+        alert("Bạn cần đăng nhập.");
+        this.$router.push("/login");
+        return;
+      }
+
+      try {
+        const response = await axios.get(`http://localhost:8080/admin/product/findAll`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+        });
+        this.products = response.data;
+        console.log("products: ", this.products);
+      } catch (error) {
+        console.error("Lỗi khi tải sản phẩm:", error);
+        alert("Không thể tải danh mục.");
+      }
+    },
+
     handleFileUpload(event, index) {
       const file = event.target.files[0];
       if (file) {
@@ -96,6 +188,93 @@ export default {
       return true;
     },
 
+    async updateProduct() {
+      const token = Cookies.get("authToken");
+      if (!token) {
+        alert("Bạn cần đăng nhập để tiếp tục.");
+        this.$router.push("/login");
+        return;
+      }
+
+      if (!this.validateForm()) return;
+
+      try {
+        console.log("Cập nhật sản phẩm:", this.product.id);
+        console.log("Danh sách URL ảnh trước khi cập nhật:", this.imageUrls);
+
+        // 1️⃣ Xóa ảnh cũ trước khi upload ảnh mới
+        if (this.imageUrls.length > 0) {
+          await axios.post(
+              "http://localhost:8080/admin/variation/images/delete",
+              this.imageUrls, // Gửi danh sách ảnh trực tiếp
+              {
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+              }
+          );
+          console.log("Xóa ảnh cũ thành công:", this.imageUrls);
+        }
+
+        // 2️⃣ Cập nhật sản phẩm
+        await axios.post(
+            `http://localhost:8080/admin/product/update`,
+            this.product,
+            {
+              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+            }
+        );
+
+        // 3️⃣ Upload ảnh mới
+        const uploadedImages = [];
+        for (const image of this.images) {
+          if (image.file) {
+            const formData = new FormData();
+            formData.append("file", image.file);
+
+            const uploadResponse = await axios.post(
+                "http://localhost:8080/admin/variation/images/upload",
+                formData,
+                {
+                  headers: { Authorization: `Bearer ${token}`,"Content-Type": "multipart/form-data" }
+                }
+            );
+
+            uploadedImages.push(uploadResponse.data.urls[0]);
+          }
+        }
+
+        // 4️⃣ Gộp ảnh cũ & mới
+        const finalImages = [
+          ...uploadedImages  // Ảnh mới upload
+        ];
+
+        console.log("Danh sách ảnh cuối cùng để gửi lên API:", finalImages);
+
+        // 5️⃣ Gửi danh sách ảnh lên backend
+        const imageRequests = finalImages.map((imageUrl, index) => ({
+          product: {
+            id: this.product.id
+          },
+          cd_Images: imageUrl,
+          set_Default: index === this.defaultImageIndex
+        }));
+
+        await axios.post(
+            "http://localhost:8080/admin/variation/images/setproduct",
+            imageRequests,
+            {
+              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+            }
+        );
+
+        alert("Cập nhật sản phẩm thành công!");
+        this.$router.push("/product");
+      } catch (error) {
+        console.error("Lỗi khi cập nhật sản phẩm:", error);
+        alert("Đã xảy ra lỗi khi cập nhật sản phẩm!");
+      }
+    },
+
+
     async addProduct() {
       const token = Cookies.get("token");
       if (!token) {
@@ -108,7 +287,7 @@ export default {
       if (!this.validateForm()) {
         return;
       }
-
+      console.log("product: ", this.product.id);
       try {
         // 1. Gửi thông tin sản phẩm lên API
         const productResponse = await axios.post(
@@ -162,6 +341,7 @@ export default {
         );
 
         alert("Thêm sản phẩm thành công!");
+        this.$router.push("/product");
       } catch (error) {
         console.error("Lỗi:", error);
         alert("Đã xảy ra lỗi khi thêm sản phẩm!");
@@ -178,7 +358,7 @@ export default {
       }
 
       try {
-        const response = await axios.get("http://localhost:8080/admin/category/get", {
+        const response = await axios.get("http://localhost:8080/admin/category/getcategory", {
           headers: {Authorization: `Bearer ${token}`}
         });
         this.categories = response.data.content;

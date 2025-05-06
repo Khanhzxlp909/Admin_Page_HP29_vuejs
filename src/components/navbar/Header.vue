@@ -37,43 +37,51 @@
     <hr/>
     <ul class="app-menu">
       <li>
-        <a
-            class="app-menu__item"
-            href="/order"
-            @click.prevent="navigateTo('order')"
-        >
-          <i class="app-menu__icon bx bx-cart-alt"></i>
+        <a class="app-menu__item" href="/order" @click.prevent="navigateTo('order')">
+          <i class="app-menu__icon bx bx-cart"></i>
           <span class="app-menu__label">POS Bán Hàng</span>
         </a>
       </li>
       <li>
         <a class="app-menu__item" href="/warehouse">
-          <i class="app-menu__icon bx bx-id-card"></i>
+          <i class="app-menu__icon bx bx-box"></i>
           <span class="app-menu__label">Kho hàng</span>
         </a>
       </li>
       <li>
         <a class="app-menu__item" href="/customer">
-          <i class="app-menu__icon bx bx-user-voice"></i>
+          <i class="app-menu__icon bx bx-group"></i>
           <span class="app-menu__label">Quản lý khách hàng</span>
         </a>
       </li>
       <li>
         <a class="app-menu__item" href="/product">
-          <i class="app-menu__icon bx bx-purchase-tag-alt"></i>
+          <i class="app-menu__icon bx bx-package"></i>
           <span class="app-menu__label">Quản lý sản phẩm</span>
         </a>
       </li>
       <li>
         <a class="app-menu__item" href="/posorder">
-          <i class="app-menu__icon bx bx-task"></i>
+          <i class="app-menu__icon bx bx-receipt"></i>
           <span class="app-menu__label">Quản lý đơn hàng</span>
         </a>
       </li>
       <li>
         <a class="app-menu__item" href="/employee">
-          <i class="app-menu__icon bx bx-task"></i>
+          <i class="app-menu__icon bx bx-id-card"></i>
           <span class="app-menu__label">Nhân viên</span>
+        </a>
+      </li>
+      <li>
+        <a class="app-menu__item" href="/news">
+          <i class="app-menu__icon bx bx-news"></i>
+          <span class="app-menu__label">Tin tức</span>
+        </a>
+      </li>
+      <li>
+        <a class="app-menu__item" href="/contact">
+          <i class="app-menu__icon bx bx-bell"></i>
+          <span class="app-menu__label">Thông báo</span>
         </a>
       </li>
       <li>
@@ -89,6 +97,7 @@
         </a>
       </li>
     </ul>
+
   </aside>
 </template>
 
@@ -116,7 +125,7 @@ export default {
   mounted() {
     if (!this.admin || Object.keys(this.admin).length === 0) {
       this.admin = 'Chưa đăng nhập'
-      // this.$router.push("/login"); // Chuyển hướng đến trang đăng nhập nếu admin null
+      this.$router.push("/login"); // Chuyển hướng đến trang đăng nhập nếu admin null
     }
   },
   methods: {
@@ -126,6 +135,7 @@ export default {
     logout() {
       // Xóa token khỏi cookies
       Cookies.remove("token"); // Thay đổi "token" thành tên cookie bạn đã sử dụng
+      Cookies.remove("authToken"); // Thay đổi "token" thành tên cookie bạn đã sử dụng
       Cookies.remove("admin"); // Thay đổi "token" thành tên cookie bạn đã sử dụng
       location.reload();
       // Chuyển hướng đến trang đăng nhập

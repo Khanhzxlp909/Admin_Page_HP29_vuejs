@@ -51,7 +51,6 @@
                   <th>ID</th>
                   <th>Tên nhân viên</th>
                   <th>Số điện thoại</th>
-                  <th>Trạng thái</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -59,7 +58,6 @@
                   <td>{{ employee.id }}</td>
                   <td>{{ employee.name }}</td>
                   <td><span class="tag tag-success">{{ employee.phone }}</span></td>
-                  <td><span class="tag tag-success">{{ employee.status }}</span></td>
                 </tr>
                 </tbody>
               </table>

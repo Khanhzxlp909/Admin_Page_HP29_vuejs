@@ -45,7 +45,7 @@
               </form>
               <div class="row element-button">
                 <div class="col-sm-2">
-                  <button class="btn btn-add btn-sm" @click="" title="Thêm">
+                  <button class="btn btn-add btn-sm" @click="navigateToAddSupplier" title="Thêm">
                     <i class="fas fa-plus"></i> Tạo mới nhà phân phối
                   </button>
                 </div>
@@ -126,6 +126,9 @@ export default {
     this.order.employeeName = JSON.parse(Cookies.get("admin")).name
   },
   methods: {
+    navigateToAddSupplier() {
+      this.$router.push("/supplier");
+    },
     formatPrice(price) {
       // Định dạng giá thành chuỗi
       return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " ₫";

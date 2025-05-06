@@ -20,7 +20,8 @@ const login = async () => {
 
     if (response.data.roles.includes('ADMIN') || response.data.roles.includes('USER')) {
       if (response.data && response.data.token) {
-        Cookies.set('token', response.data.token); // Lưu token vào cookie với thời gian hết hạn 7 ngày
+        Cookies.set('token', response.data.token);
+        Cookies.set('authToken', response.data.token);
         Cookies.set('admin', JSON.stringify(response.data.userInfo), { expires: 1 });
         Cookies.set('roles', JSON.stringify(response.data.roles));
         console.log("ADMIN: " + JSON.stringify(Cookies.get('admin')));

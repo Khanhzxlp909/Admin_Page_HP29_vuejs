@@ -50,15 +50,7 @@
                   </select>
                 </div>
                 <div class="form-group col-md-3">
-                  <label for="productPrice">Giá:</label>
-                  <input type="number" id="productPrice" v-model="product.price" class="form-control"   style="width: max-content"/>
-                </div>
-                <div class="form-group col-md-3">
-                  <label for="productQuantity">Số lượng:</label>
-                  <input type="number" id="productQuantity" v-model="product.quantity" class="form-control" readonly   style="width: max-content"/>
-                </div>
-                <div class="form-group col-md-3">
-                  <label for="productWeight">Trọng lượng:</label>
+                  <label for="productWeight">Trọng lượng (KG):</label>
                   <input type="text" id="productWeight" v-model="product.weight" class="form-control"   />
                 </div>
                 <div class="form-group col-md-3">
@@ -69,18 +61,22 @@
                   <label for="productCategory">Danh mục:</label>
                   <input type="text" id="productCategory" v-model="product.categoryName" class="form-control"   readonly />
                 </div>
-                <br>
-                <button type="submit" class="btn btn-primary">{{ isEditing ? 'Cập nhật biến thể' : 'Thêm biến thể' }}</button>
+                <div class="form-group col-md-3">
+                  <label for="productPrice">Giá:</label>
+                  <input type="number" id="productPrice" v-model="product.price" class="form-control"   style="width: max-content"/>
+                </div>
+                <div class="form-group col-md-3">
+                  <label for="productQuantity">Số lượng:</label>
+                  <input type="number" id="productQuantity" v-model="product.quantity" class="form-control" readonly   style="width: max-content"/>
+                </div>
+                <div class="form-group col-md-3">
+                  <button type="submit" class="btn btn-primary">{{ isEditing ? 'Cập nhật biến thể' : 'Thêm biến thể' }}</button>
+                </div>
               </form>
               <div class="row element-button">
                 <div class="col-sm-2">
                   <button class="btn btn-add btn-sm" @click="navigateToAddCategory" title="Thêm">
                     <i class="fas fa-plus"></i> Tạo mới danh mục
-                  </button>
-                </div>
-                <div class="col-sm-2">
-                  <button class="btn btn-add btn-sm" @click="navigateToAddVariation" title="Thêm">
-                    <i class="fas fa-plus"></i> Tạo mới biến thể
                   </button>
                 </div>
                 <div class="col-sm-2">
@@ -268,9 +264,6 @@ export default {
     navigateToAddCategory() {
       this.$router.push("/category");
     },
-    navigateToAddVariation() {
-      this.$router.push("/product/add");
-    },
     navigateToAddBrands() {
       this.$router.push("/brands");
     },
@@ -367,7 +360,7 @@ export default {
     getDefaultImageUrl(imagesDTOS) {
       if (imagesDTOS && imagesDTOS.length > 0) {
         const defaultImage = imagesDTOS.find((image) => image.set_Default);
-        return defaultImage ? `http://localhost:8080/images/${defaultImage.cd_Images}` : "/img/default.jpg";
+        return defaultImage ? `http://localhost:8080/upload/images/${defaultImage.cd_Images}` : "/img/default.jpg";
       }
       return "/img/default.jpg";
     },
@@ -445,7 +438,7 @@ export default {
       }
 
       try {
-        const response = await axios.get("http://localhost:8080/admin/brands/get", {
+        const response = await axios.get("http://localhost:8080/admin/brands/getbrands", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
