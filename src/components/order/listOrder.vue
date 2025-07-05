@@ -84,13 +84,12 @@
                           item.status === 3 &&
                           !isOver30Days(item.requestDate) &&
                           item.status !== 4 &&
-                          !item.note?.includes('Tr? hàng đơn #')
+                          !item.note?.includes('Trả hàng đơn #')
                         "
                       @click="initiateReturnOrder(item)"
                   >
                     <i class="fa fa-edit"></i> Trả hàng
                   </button>
-
                 </td>
               </tr>
               </tbody>

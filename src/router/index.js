@@ -3,16 +3,13 @@ import Dashboard from "@/components/view/orderPage.vue";
 import POSOrder from "@/components/order/orderForm.vue";
 import ListOrder from "@/components/order/listOrder.vue";
 import LoginPage from "@/components/login/loginPages.vue";
-import productPage from "@/components/product/productPage.vue";
-import uploadImages from "@/components/product/uploadImagesProduct.vue";
+import variationPage from "@/components/product/VariationPage.vue";
+import uploadImages from "@/components/product/productPages.vue";
 import productEdit from "@/components/product/productEdit.vue";
 import productAdd from "@/components/product/productAdd.vue";
 import customerList from "@/components/customer/customerList.vue";
 import categoryPage from "@/components/product/category/categoryPage.vue";
 import brandsPage from "@/components/product/brands/brandsPage.vue";
-import wareHouse from "@/components/wareHouse/warehouse.vue";
-import wareHouseDetail from "@/components/wareHouse/WarehouseDetail.vue";
-import SuppilerPage from "@/components/wareHouse/SuppillerPage.vue";
 import customerAdd from "@/components/customer/customerAdd.vue";
 import customerEdit from "@/components/customer/customerEdit.vue";
 import employeePages from "@/components/employee/employeePages.vue";
@@ -28,15 +25,12 @@ const routes = [
     { path: "/order", component: POSOrder, meta: { requiresAuth: true } },
     { path: "/posorder", component: ListOrder, meta: { requiresAuth: true } },
     { path: "/login", component: LoginPage },
-    { path: "/product", component: productPage, meta: { requiresAuth: true } },
+    { path: "/product", component: variationPage, meta: { requiresAuth: true } },
     { path: "/addproduct", component: uploadImages, meta: { requiresAuth: true } },
     { path: "/product/add", component: productAdd, meta: { requiresAuth: true } },
     { path: "/product/edit/:id", component: productEdit, props: true, meta: { requiresAuth: true } },
     { path: "/customer", component: customerList, meta: { requiresAuth: true } },
     { path: "/employee", component: employeePages, meta: { requiresAuth: true } },
-    { path: "/warehouse", component: wareHouse, meta: { requiresAuth: true } },
-    { path: "/supplier", component: SuppilerPage, meta: { requiresAuth: true } },
-    { path: "/warehouse/warehouseDetails", component: wareHouseDetail, meta: { requiresAuth: true } },
     { path: "/customer/add", component: customerAdd, meta: { requiresAuth: true } },
     { path: "/customer/edit", component: customerEdit, meta: { requiresAuth: true } },
     { path: "/category", component: categoryPage, meta: { requiresAuth: true } },
